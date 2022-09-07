@@ -11,14 +11,14 @@ from pprint import pprint
 
 maxlen = 10 # for a sentence
 batch_size = 6 # sentences per batch  
-epochs = 64  
+epochs = 1     
 learning_rate = 0.001 
 max_pred = 2  #                                 NOW tokens to mask per sentence (no padding here EVER!)
-n_layers = 3 # number of Encoders stacked
+n_layers = 1 # number of Encoders stacked
 n_heads = 12 # for multi head attention
 d_model = 64 # embedding size
 d_ff = 4 * d_model  # feedforward dim
-d_k = d_v = 8  # d_k is for K and Q, d_v is for V
+d_k = d_v = 16  # d_k is for K and Q, d_v is for V
 
 
 # For now, work with sentences that are as short as 10 words long (maxlen)
@@ -151,9 +151,9 @@ class MultiHeadAttention(nn.Module):
         # nn.Linear the last dimension will become d_x*n_heads
         # e.g. we'll input matrix of dims (batch size x sentence maxlen x d_model)
         # and output matrix of dims (batch size x sentence maxlen x )
-        self.W_Q = nn.Linear(d_model, d_k * n_heads)
-        self.W_K = nn.Linear(d_model, d_k * n_heads)
-        self.W_V = nn.Linear(d_model, d_v * n_heads)
+        self.W_Q = nn.Linear(d_model, d_k)
+        self.W_K = nn.Linear(d_model, d_k)
+        self.W_V = nn.Linear(d_model, d_v)
 
     def forward(self, Q, K, V, attn_mask):
         # Q, K, V are the same -- token/pos embeddings batch (batch size x sentence maxlen x d_model)
@@ -162,31 +162,15 @@ class MultiHeadAttention(nn.Module):
 
         residual, batch_size = Q, Q.size(0)
 
-        # just trying to flesh out components a bit
         q_s = self.W_Q(Q)
         k_s = self.W_K(K)
         v_s = self.W_V(V)
-        # where new_last_dim = (d_k or d_v)*n_heads
-        # now (batch size x sentence maxlen x new_last_dim)
-
-        # now we go to four dimensions by splitting new_last_dim vec into a 2d
-        # matrix of dims (n_heads x (d_k or d_v))
-        q_s = q_s.view(batch_size, -1, n_heads, d_k)
-        k_s = k_s.view(batch_size, -1, n_heads, d_k)
-        v_s = v_s.view(batch_size, -1, n_heads, d_v)
-        # now (batch size x sentence maxlen x n_heads x (d_k or d_v))
-
-        q_s = q_s.transpose(1,2)        # transpose is NOT a variant of .view
-        k_s = k_s.transpose(1,2)        # it does what it looks like here
-        v_s = v_s.transpose(1,2)
-        # now (batch size x n_heads x sentence maxlen x (d_k or d_v))
-    
-
-        # before, attn_mask is (batch size x sentence maxlen x sentence maxlen)
-        attn_mask = attn_mask.unsqueeze(1).repeat(1, n_heads, 1, 1) 
-        # now, attn_mask is (batch size x n_heads x sentence maxlen x sentence maxlen)
+        # now (batch size x sentence maxlen x d_k|d_v)
 
         context, attn = ScaledDotProductAttention()(q_s, k_s, v_s, attn_mask)
+
+
+        # to change!
         # context is (batch size x n_heads x sentence maxlen x d_v)
         # attn is (batch size x n_heads x sentence maxlen x sentence maxlen)
 
@@ -455,5 +439,3 @@ print('')
 #         print(orig_sent)
 #         print(pred_sent)
 #         print('')
-
-
