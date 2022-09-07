@@ -10,12 +10,11 @@ from pprint import pprint
 
 
 maxlen = 10 # for a sentence
-batch_size = 6 # sentences per batch  
-epochs = 1     
+batch_size = 12 # sentences per batch  
+epochs = 64     
 learning_rate = 0.001 
 max_pred = 2  #                                 NOW tokens to mask per sentence (no padding here EVER!)
-n_layers = 1 # number of Encoders stacked
-n_heads = 12 # for multi head attention
+n_layers = 2 # number of Encoders stacked
 d_model = 64 # embedding size
 d_ff = 4 * d_model  # feedforward dim
 d_k = d_v = 16  # d_k is for K and Q, d_v is for V
@@ -115,35 +114,37 @@ class ScaledDotProductAttention(nn.Module):
         super(ScaledDotProductAttention, self).__init__()
 
     def forward(self, Q, K, V, attn_mask):
-        # Q (batch size x n_heads x sentence maxlen x d_k)
-        # K (batch size x n_heads x sentence maxlen x d_k)
-        # V (batch size x n_heads x sentence maxlen x d_v)
-        # attn_mask (batch size x n_heads x sentence maxlen x sentence maxlen)
+        # Q (batch size x sentence maxlen x d_k)
+        # K (batch size x sentence maxlen x d_k)
+        # V (batch size x sentence maxlen x d_v)
+        # attn_mask (batch size x sentence maxlen x sentence maxlen)
+        # but it's generalizable that with multi head, this fn can stay same
+        # since before the final two dimensions of matrix, torch batches 
 
         K_T = K.transpose(-1,-2)
-        # (batch size x n_heads x d_k x sentence maxlen)
+        # (batch size x d_k x sentence maxlen)
 
         scores = torch.matmul(Q, K_T) 
         scores /= np.sqrt(d_k) 
-        # (batch size x n_heads x sentence maxlen x sentence maxlen) 
+        # (batch size x sentence maxlen x sentence maxlen) 
         # now is same dims as attn_mask so it can be filled
         scores.masked_fill_(attn_mask, -1e9) # padding idxs per sent masked with -1e9
 
         attn = nn.Softmax(dim=-1)(scores)
-        # attn is scores softmaxxed, (batch size x n_heads x sentence maxlen x sentence maxlen)
+        # attn is scores softmaxxed, (batch size x sentence maxlen x sentence maxlen)
         # part of tensor that was changed to -1e9 is 0.0 after softmax, because -1e9 is such a tiny num 
 
         # dims of attn and V already noted
         context = torch.matmul(attn, V)
-        # (batch size x n_heads x sentence maxlen x d_v)
+        # (batch size x sentence maxlen x d_v)
 
         return context, attn 
 
 
 
-class MultiHeadAttention(nn.Module):
+class SingleHeadAttention(nn.Module):
     def __init__(self):
-        super(MultiHeadAttention, self).__init__()
+        super(SingleHeadAttention, self).__init__()
         # These are used to create queries, keys, vectors out of word embeddings
         # nn.Linear arg0 is size of each input sample, arg1 is size of output
         # sample, so for this model that means that inputs ought to have
@@ -168,24 +169,11 @@ class MultiHeadAttention(nn.Module):
         # now (batch size x sentence maxlen x d_k|d_v)
 
         context, attn = ScaledDotProductAttention()(q_s, k_s, v_s, attn_mask)
+        # context is (batch size x sentence maxlen x d_v)
+        # attn is (batch size x sentence maxlen x sentence maxlen)
 
-
-        # to change!
-        # context is (batch size x n_heads x sentence maxlen x d_v)
-        # attn is (batch size x n_heads x sentence maxlen x sentence maxlen)
-
-        context = context.transpose(1, 2)
-        context = context.contiguous() # returns "same" context tensor but now contiguous in memory
-        # context is (batch size x sentence maxlen x n_heads x d_v)
-
-        # compress from 4 dims back to 3 dims (I think we only had 4 for the sake of multi head attn)
-        context = context.view(batch_size, -1, n_heads * d_v) 
-        # context is (batch size x sentence maxlen x n_heads*d_v)
-
-        # remember, nn.Linear is just a transform; here arg0 tells us that the
-        # last dim (tensor with floats dim) is n_heads*d_v, and that we want the
-        # last dim to be transformed to be of dim d_model now
-        output = nn.Linear(n_heads*d_v, d_model)(context)
+        # ? I wonder why this layer isn't a member / what difference it makes differentiation-wise
+        output = nn.Linear(d_v, d_model)(context)
         # output is (batch size x sentence maxlen x d_model)
 
         # Again, LayerNorm will just tug floats closer to 0, and arg0==d_model tells
@@ -201,7 +189,7 @@ class MultiHeadAttention(nn.Module):
 class EncoderLayer(nn.Module):
     def __init__(self):
         super(EncoderLayer, self).__init__()
-        self.enc_self_attn = MultiHeadAttention()
+        self.enc_self_attn = SingleHeadAttention()
         self.pos_ffn = PoswiseFeedForwardNet()
 
     def forward(self, enc_inputs, enc_self_attn_mask):
@@ -211,12 +199,12 @@ class EncoderLayer(nn.Module):
         enc_outputs, attn = self.enc_self_attn(
             enc_inputs, enc_inputs, enc_inputs, enc_self_attn_mask) # enc_inputs to same Q,K,V 
         # enc_output (batch size x sentence maxlen x d_model)
-        # attn (batch size x n_heads x sentence maxlen x sentence maxlen)
+        # attn (batch size x sentence maxlen x sentence maxlen)
         
         enc_outputs = self.pos_ffn(enc_outputs) 
         # (batch size x sentence maxlen x d_model)
 
-        return enc_outputs, attn
+        return enc_outputs, attn # return attention just to look at it!
 
 
 
@@ -323,7 +311,7 @@ class BERT(nn.Module):
         # enc_self_attn_mask is (batch size x sentence maxlen x sentence maxlen)
 
         for layer in self.layers:
-            output, _ = layer(output, enc_self_attn_mask)                   # ? does EncoderLayer() return redundant second item
+            output, attn = layer(output, enc_self_attn_mask)                   # ? does EncoderLayer() return redundant second item
             # output remains (batch size x sentence maxlen x d_model)
 
         # Deal with masked words now
@@ -404,38 +392,38 @@ print('')
 
 
 
-# # Predictions on training set
-# with torch.no_grad():
-#     logits_lm = model(input_ids, masked_pos)
-#     batch_preds = logits_lm.data.max(2)[1]
+# Predictions on training set
+with torch.no_grad():
+    logits_lm = model(input_ids, masked_pos)
+    batch_preds = logits_lm.data.max(2)[1]
 
-#     # print(input_ids)
-#     # print(masked_pos)
-#     # # compare following two against each other
-#     print(masked_tokens)
-#     print(batch_preds)
-#     print('')
+    # print(input_ids)
+    # print(masked_pos)
+    # # compare following two against each other
+    print(masked_tokens)
+    print(batch_preds)
+    print('')
 
-#     input_ids = input_ids.tolist()
-#     masked_pos = masked_pos.tolist()
-#     masked_tokens = masked_tokens.tolist()
-#     batch_preds = batch_preds.tolist()
+    input_ids = input_ids.tolist()
+    masked_pos = masked_pos.tolist()
+    masked_tokens = masked_tokens.tolist()
+    batch_preds = batch_preds.tolist()
 
-#     for i in range(len(input_ids)):
-#         token_id_sent = input_ids[i]
-#         sent_masked_pos = masked_pos[i]
-#         sent_masked_tok = masked_tokens[i]
-#         sent_pred_tok = batch_preds[i]
+    for i in range(len(input_ids)):
+        token_id_sent = input_ids[i]
+        sent_masked_pos = masked_pos[i]
+        sent_masked_tok = masked_tokens[i]
+        sent_pred_tok = batch_preds[i]
 
-#         masked_sent = ' '.join(number_dict[id] for id in token_id_sent)
-#         for j in range(max_pred):
-#             token_id_sent[ sent_masked_pos[j] ] = sent_masked_tok[j]
-#         orig_sent = ' '.join(number_dict[id] for id in token_id_sent)
-#         for j in range(max_pred):
-#             token_id_sent[ sent_masked_pos[j] ] = sent_pred_tok[j]
-#         pred_sent = ' '.join(number_dict[id] for id in token_id_sent)
+        masked_sent = ' '.join(number_dict[id] for id in token_id_sent)
+        for j in range(max_pred):
+            token_id_sent[ sent_masked_pos[j] ] = sent_masked_tok[j]
+        orig_sent = ' '.join(number_dict[id] for id in token_id_sent)
+        for j in range(max_pred):
+            token_id_sent[ sent_masked_pos[j] ] = sent_pred_tok[j]
+        pred_sent = ' '.join(number_dict[id] for id in token_id_sent)
 
-#         print(masked_sent)
-#         print(orig_sent)
-#         print(pred_sent)
-#         print('')
+        print(masked_sent)
+        print(orig_sent)
+        print(pred_sent)
+        print('')
