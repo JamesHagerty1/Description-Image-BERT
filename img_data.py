@@ -157,4 +157,5 @@ if __name__ == '__main__':
     # card_words()
     # card_sentences()
     # card_training_data()
-    preview_train()
+    # preview_train()
+    pass
