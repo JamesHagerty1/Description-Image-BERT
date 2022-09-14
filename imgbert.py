@@ -18,13 +18,14 @@ input_ids, masked_tokens, masked_pos = map(torch.LongTensor, zip(*batch))
 
 
 
-epochs = 1000
-learning_rate = 0.001 
-max_pred = 1  #                                 
+epochs = 100000
+learning_rate = 0.0001
+max_pred = 1  #         
+
 n_layers = 1 # number of Encoders stacked
-d_model = 96 # embedding size
-d_ff = d_model  # feedforward dim
-d_k = d_v = 16  # d_k is for K and Q, d_v is for V
+d_model = 64 # embedding size
+d_ff =  d_model  # feedforward dim
+d_k = d_v = 8  # d_k is for K and Q, d_v is for V
 
 vocab_size = len(ids_to_tokens)
 samples = len(data) * 2
@@ -309,49 +310,58 @@ class BERT(nn.Module):
 
 
 
-model = BERT()
-criterion = nn.CrossEntropyLoss()
-optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+def train():
+    model = BERT()
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
 
-for epoch in range(epochs): 
-    avg_loss = 0
+    for epoch in range(epochs): 
+        avg_loss = 0
 
-    for iter in range( samples // batch_size ):
+        for iter in range( samples // batch_size ):
 
-        input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
-        masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
-        masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
+            input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
+            masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
+            masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
-        # Training boilerplate
-        optimizer.zero_grad()
+            # Training boilerplate
+            optimizer.zero_grad()
 
-        logits_lm = model(input_ids_, masked_pos_)
-        # (batch size x max_pred x vocab_size)
+            logits_lm = model(input_ids_, masked_pos_)
+            # (batch size x max_pred x vocab_size)
 
-        logits_lm = logits_lm.transpose(1, 2)
-        # (batch size x vocab_size x max_pred)
+            logits_lm = logits_lm.transpose(1, 2)
+            # (batch size x vocab_size x max_pred)
 
-        # Hold up logits_lm (predictions for masked tokens) to the official masked_tokens
-        # masked_tokens (batch_size x max_pred)
-        loss_lm = criterion(logits_lm, masked_tokens_) 
+            # Hold up logits_lm (predictions for masked tokens) to the official masked_tokens
+            # masked_tokens (batch_size x max_pred)
+            loss_lm = criterion(logits_lm, masked_tokens_) 
 
-        # Does not change loss_lm value, seems to be training boilerplate
-        loss_lm = (loss_lm.float()).mean()
+            # Does not change loss_lm value, seems to be training boilerplate
+            loss_lm = (loss_lm.float()).mean()
 
-        with torch.no_grad():
-            avg_loss += loss_lm.item()
+            with torch.no_grad():
+                avg_loss += loss_lm.item()
 
-        # More training boilerplate
-        loss_lm.backward()
-        optimizer.step()
+            # More training boilerplate
+            loss_lm.backward()
+            optimizer.step()
 
-    avg_loss /= (samples // batch_size)
-    print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
+        avg_loss /= (samples // batch_size)
+        print('Epoch:', '%06d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
 
-    if avg_loss < 0.4:
-        break
+        if avg_loss <= 0.1:
+            torch.save(model, 'ImgBert')
+            break
 
-    
 
 
+def test():
+    model = torch.load('ImgBert')
+    print('yo')
+
+
+
+if __name__ == '__main__':
+    train()
 
