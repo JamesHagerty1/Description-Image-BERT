@@ -5,12 +5,14 @@ from pprint import pprint
 import re
 import pickle
 
+img_d = 64
+
 def make_small_cards():
     for filename in os.listdir( 'cards' ):
         if not filename.endswith( '.png' ):
             continue
         img = Image.open( f'cards/{filename}' )
-        img_ = img.resize( (64, 64) )
+        img_ = img.resize( (img_d, img_d) )
         img_ = img_.convert( 'L' )
         img_ = img_.point( lambda x: 0 if x<185 else 255, '1' )
         img_.save( f'small_cards/{filename}' )
@@ -48,7 +50,6 @@ def card_sentences():
         # print(card_name)
 
         f.write(card_name)
-        f.write(' ')
 
         img = Image.open( f'small_cards/{filename}' )
         pixels = img.load()
@@ -105,6 +106,7 @@ def card_training_data():
         sent[2] = mask_me_2
 
     db = {}
+    db['data'] = data
     db['tokens_to_ids'] = tokens_to_ids
     db['ids_to_tokens'] = ids_to_tokens
     db['batch'] = batch
@@ -112,8 +114,43 @@ def card_training_data():
     pickle.dump(db, dbfile)
     dbfile.close()
 
+def reconstruct_img(img_list):
+    card_name = ' '.join(img_list[:3])
+    print(card_name)
+
+    card_words = img_list[3:]
+    card_pixels = []
+    for word in card_words:
+        for pixel in word:
+            card_pixels.append(pixel)
+    # print(card_pixels)
+    # print(len(card_pixels))
+
+    canvas = Image.open( f'test_cards/canvas.png' )
+    w, h = canvas.size
+
+    i = 0
+    for x in range(w):
+        for y in range(h):
+            color = card_pixels[i]
+            i += 1
+            color = 0 if color == '0' else 255
+            canvas.putpixel((x,y),(color))
+    
+    canvas.save(f'test_cards/{card_name}.png')
+            
 def preview_train():
-    pass
+    dbfile = open('img_data_pkl', 'rb')
+    db = pickle.load(dbfile)
+
+    data = db['data']
+    # tokens_to_ids = db['tokens_to_ids']
+    # ids_to_tokens = db['ids_to_tokens']
+    # batch = db['batch']
+
+    reconstruct_img(data[12])
+
+    dbfile.close()
 
 if __name__ == '__main__':
     # make_small_cards()
