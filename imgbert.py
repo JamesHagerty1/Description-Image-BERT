@@ -19,7 +19,7 @@ input_ids, masked_tokens, masked_pos = map(torch.LongTensor, zip(*batch))
 
 
 epochs = 100000000000
-learning_rate = 0.001
+# learning_rate = 0.001 # using optimizer default lr
 max_pred = 1  #         
 
 n_layers = 1 # number of Encoders stacked
@@ -239,7 +239,10 @@ class BERT(nn.Module):
         # mask used so that attention DOES NOT consider 0 paddings of token id sents
         # pad_attn_mask is our batch but now all integers are bools, where 0
         # (padding) are True and all other tokens are False
-        pad_attn_mask = input_ids.data.eq(0).unsqueeze(1) 
+
+        pad_token_id = -1                 # currently using a dict that has no pad token / pad token id
+
+        pad_attn_mask = input_ids.data.eq(pad_token_id).unsqueeze(1) 
 
         # pad_attn_mask is (batch size x sentence maxlen), same as our batch
 
@@ -305,19 +308,18 @@ class BERT(nn.Module):
         # currently assuming it just adds to the vocab_size last dim arrays of logits_lm
         # because they are of the same dimensionality, vocab_size and vocab_size
         logits_lm += self.decoder_bias 
+
         
-        return logits_lm
+        return logits_lm, attn
 
 
 
 def train():
     model = BERT()
     criterion = nn.CrossEntropyLoss()
-    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     optimizer = optim.Adagrad(model.parameters())
     
-
-    min_avg_loss = 0.1
+    min_avg_loss = 0.5
 
     for epoch in range(epochs): 
         avg_loss = 0
@@ -331,7 +333,7 @@ def train():
             # Training boilerplate
             optimizer.zero_grad()
 
-            logits_lm = model(input_ids_, masked_pos_)
+            logits_lm, attn = model(input_ids_, masked_pos_)
             # (batch size x max_pred x vocab_size)
 
             logits_lm = logits_lm.transpose(1, 2)
@@ -353,47 +355,71 @@ def train():
 
         avg_loss /= (samples // batch_size)
 
+        # print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
         if avg_loss < min_avg_loss:
-            # print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
             min_avg_loss = avg_loss
-            torch.save(model, 'ImgBert2')
+            torch.save(model, 'ImgBert3')
 
             if avg_loss < 0.02:
                 break
 
         # sanity check
-        if epoch % 1000 == 0:
+        if epoch % 100 == 0:
             f = open('imgbert.txt', 'w')
-            s = f'Epoch {epoch+1}, loss {avg_loss}'
+            s = f'Epoch {epoch+1}, min_avg_loss {min_avg_loss}'
             f.write(s)
             f.close()
         
 
 
-
 def test():
-    model = torch.load('ImgBert2')
-    model.eval()
-
+    model = torch.load('ImgBert3')
     criterion = nn.CrossEntropyLoss()
+
+    # I trained ImgBert2 with all samples as a batch, so only one iter passes
 
     for iter in range( samples // batch_size ):
         input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
         masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
         masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
-        logits_lm = model(input_ids_, masked_pos_)
+        logits_lm, attn = model(input_ids_, masked_pos_)
+        batch_preds = logits_lm.data.max(2)[1]
         logits_lm = logits_lm.transpose(1, 2)
         loss_lm = criterion(logits_lm, masked_tokens_) 
 
-        print(loss_lm)
+        batch_preds = batch_preds.tolist()
+        masked_tokens_ = masked_tokens_.tolist()
+        misses = 0
+        for pred, val in zip(batch_preds, masked_tokens_):
+            if pred != val:
+                misses += 1
+        acc = (len(batch_preds) - misses) / len(batch_preds)
+        print(f'accuracy: {acc}')
+        print(loss_lm.item())
+        print(attn.shape)
 
 
 
-        
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+# specially for ImgBert2
+def view_attn():
+    model = torch.load('ImgBert3')
+    criterion = nn.CrossEntropyLoss()
+
+    logits_lm, attn = model(input_ids, masked_pos)
+    logits_lm = logits_lm.transpose(1, 2)
+    loss_lm = criterion(logits_lm, masked_tokens) 
+
+    print(loss_lm.item())
+    print(input_ids.shape, attn.shape)
+    
+    # for item in input_ids[0]:
+    #     print( ids_to_tokens[ item.item() ] )
 
 
 
 if __name__ == '__main__':
-    test()
+    train()
 
