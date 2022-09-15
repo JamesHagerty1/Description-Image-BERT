@@ -29,7 +29,7 @@ d_k = d_v = 16  # d_k is for K and Q, d_v is for V
 
 vocab_size = len(ids_to_tokens)
 samples = len(data) * 2
-batch_size = samples # // 8
+batch_size = samples // 8
 maxlen = input_ids.shape[1]
 
 
@@ -262,11 +262,9 @@ class BERT(nn.Module):
 
         # create embeddings for batch entries that encode tokens + positions
         output = self.embedding(input_ids)     
-        
         # output is (batch size x sentence maxlen x d_model)
 
         enc_self_attn_mask = self.get_attn_pad_mask(input_ids)
-
         # enc_self_attn_mask is (batch size x sentence maxlen x sentence maxlen)
 
         for layer in self.layers:
@@ -319,7 +317,7 @@ def train():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adagrad(model.parameters())
     
-    min_avg_loss = 0.5
+    min_avg_loss = 5
 
     for epoch in range(epochs): 
         avg_loss = 0
@@ -354,19 +352,21 @@ def train():
             optimizer.step()
 
         avg_loss /= (samples // batch_size)
-
+        
         # print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
+
+
+        if avg_loss < 0.1 and avg_loss < min_avg_loss:
+            torch.save(model, 'ImgBert3')
         if avg_loss < min_avg_loss:
             min_avg_loss = avg_loss
-            torch.save(model, 'ImgBert3')
-
-            if avg_loss < 0.02:
-                break
+        if avg_loss < 0.02:
+            break
 
         # sanity check
         if epoch % 100 == 0:
             f = open('imgbert.txt', 'w')
-            s = f'Epoch {epoch+1}, min_avg_loss {min_avg_loss}'
+            s = f'Epoch {epoch+1}, min_avg_loss {min_avg_loss}, avg_loss {avg_loss}'
             f.write(s)
             f.close()
         
@@ -376,7 +376,7 @@ def test():
     model = torch.load('ImgBert3')
     criterion = nn.CrossEntropyLoss()
 
-    # I trained ImgBert2 with all samples as a batch, so only one iter passes
+    # I trained ImgBert3 with all samples as a batch, so only one iter passes
 
     for iter in range( samples // batch_size ):
         input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
