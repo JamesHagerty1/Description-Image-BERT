@@ -18,18 +18,18 @@ input_ids, masked_tokens, masked_pos = map(torch.LongTensor, zip(*batch))
 
 
 
-epochs = 100000
-learning_rate = 0.0001
+epochs = 100000000000
+learning_rate = 0.001
 max_pred = 1  #         
 
 n_layers = 1 # number of Encoders stacked
 d_model = 64 # embedding size
 d_ff =  d_model  # feedforward dim
-d_k = d_v = 8  # d_k is for K and Q, d_v is for V
+d_k = d_v = 16  # d_k is for K and Q, d_v is for V
 
 vocab_size = len(ids_to_tokens)
 samples = len(data) * 2
-batch_size = samples // 8
+batch_size = samples # // 8
 maxlen = input_ids.shape[1]
 
 
@@ -313,7 +313,11 @@ class BERT(nn.Module):
 def train():
     model = BERT()
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    # optimizer = optim.Adam(model.parameters(), lr=learning_rate)
+    optimizer = optim.Adagrad(model.parameters())
+    
+
+    min_avg_loss = 1
 
     for epoch in range(epochs): 
         avg_loss = 0
@@ -348,17 +352,40 @@ def train():
             optimizer.step()
 
         avg_loss /= (samples // batch_size)
-        print('Epoch:', '%06d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
 
-        if avg_loss <= 0.1:
-            torch.save(model, 'ImgBert')
-            break
+        if avg_loss < min_avg_loss:
+            # print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
+            min_avg_loss = avg_loss
+            torch.save(model, 'ImgBert2')
+
+            if avg_loss < 0.02:
+                break
+
+        # sanity check
+        if epoch % 1000 == 0:
+            f = open('imgbert.txt', 'w')
+            s = f'Epoch {epoch+1}, loss {avg_loss}'
+            f.write(s)
+            f.close()
+        
 
 
 
 def test():
-    model = torch.load('ImgBert')
-    print('yo')
+    model = torch.load('ImgBert2')
+    model.eval()
+
+    for iter in range( samples // batch_size ):
+        input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
+        masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
+        masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
+
+        logits_lm = model(input_ids_, masked_pos_)
+        batch_preds = logits_lm.data.max(2)[1]
+
+        pprint(batch_preds)
+        pprint(masked_tokens_)
+        print(',')
 
 
 
