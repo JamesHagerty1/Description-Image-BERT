@@ -317,7 +317,7 @@ def train():
     optimizer = optim.Adagrad(model.parameters())
     
 
-    min_avg_loss = 1
+    min_avg_loss = 0.1
 
     for epoch in range(epochs): 
         avg_loss = 0
@@ -375,20 +375,25 @@ def test():
     model = torch.load('ImgBert2')
     model.eval()
 
+    criterion = nn.CrossEntropyLoss()
+
     for iter in range( samples // batch_size ):
         input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
         masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
         masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
         logits_lm = model(input_ids_, masked_pos_)
-        batch_preds = logits_lm.data.max(2)[1]
+        logits_lm = logits_lm.transpose(1, 2)
+        loss_lm = criterion(logits_lm, masked_tokens_) 
 
-        pprint(batch_preds)
-        pprint(masked_tokens_)
-        print(',')
+        print(loss_lm)
+
+
+
+        
 
 
 
 if __name__ == '__main__':
-    train()
+    test()
 
