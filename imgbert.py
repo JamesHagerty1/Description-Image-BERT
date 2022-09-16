@@ -30,7 +30,7 @@ d_k = d_v = 16  # d_k is for K and Q, d_v is for V
 
 vocab_size = len(ids_to_tokens)
 samples = len(data) * 2
-batch_size = samples // 8
+batch_size = samples #// 8
 maxlen = input_ids.shape[1]
 
 
@@ -378,8 +378,9 @@ def train():
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-def draw_attn(img_name, pixels, img_w, img_h, img_word_len, txt_len):
+def draw_attn(attn, img_name, pixels, img_w, img_h, img_word_len, txt_len):
     print(img_name)
+    print(attn.shape)
     
     scale = 10
     canvas_pad = 80
@@ -408,8 +409,21 @@ def draw_attn(img_name, pixels, img_w, img_h, img_word_len, txt_len):
     for i in range(txt_len):
         x = canvas_pad + canvas_pad*i + img_w*scale*i
         y = canvas_pad
+        attn_row = attn[i]
 
         for j in range(len(pixels) // img_word_len):
+            attn_score = attn_row[j+txt_len].item() * 1000
+            attn_score = min(255, int(attn_score))
+            
+            if attn_score == 0:
+                continue
+
+            tint_factor = 1 - attn_score / 255
+            tint_factor *= 0.6
+            r_ = int(r + (255 - r) * tint_factor)
+            g_ = int(g + (255 - g) * tint_factor)
+            b_ = int(b + (255 - b) * tint_factor)
+
             col = j % (img_w // img_word_len)
             row = j // (img_w // img_word_len)
 
@@ -417,10 +431,10 @@ def draw_attn(img_name, pixels, img_w, img_h, img_word_len, txt_len):
             y0 = y + row*scale
             x1 = x+col*img_word_len*scale + img_word_len*scale - 1 
             y1 = y+scale - 1 + row*scale
+            
+            draw.rectangle([x0, y0, x1, y1], outline=(r_, g_, b_), width=3)
 
-            draw.rectangle([x0, y0, x1, y1], outline=(r,g,b))
-
-    img.save(img_name+'.png')
+    img.save('attn_cards/'+img_name+'.png')
 
 
 def view_attn():
@@ -436,17 +450,13 @@ def view_attn():
         img_w = 64
         img_h = 64
 
-        # model = torch.load('ImgBert3')
-        # _, attn = model(view_input_ids, None)
-
-        # w0attn = [min(255,int(1000*t.item())) for t in attn[i][0][txt_len:]] 
-        # w1attn = [min(255,int(1000*t.item())) for t in attn[i][1][txt_len:]]
-        # w2attn = [min(255,int(1000*t.item())) for t in attn[i][2][txt_len:]]
+        model = torch.load('ImgBert')
+        _, attn = model(view_input_ids, None)
 
         img_name = ' '.join(data[i][:txt_len])
         pixels = ''.join(data[i][txt_len:])
 
-        draw_attn(img_name, pixels, img_w, img_h, img_word_len, txt_len)
+        draw_attn(attn[i], img_name, pixels, img_w, img_h, img_word_len, txt_len)
         
 
 if __name__ == '__main__':
