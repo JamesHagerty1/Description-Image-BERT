@@ -378,26 +378,47 @@ def train():
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-def draw_attn(img_name, pixels, img_w, img_h, img_word_len, scale=10):
+def draw_attn(img_name, pixels, img_w, img_h, img_word_len, txt_len):
     print(img_name)
-    # print(pixels)
-    img = Image.new('RGB', (img_w*scale, img_h*scale), (255, 255, 255))
+    
+    scale = 10
+    canvas_pad = 80
+
+    canvas_w = txt_len*img_w*scale + canvas_pad*(txt_len+1)
+    canvas_h = img_h*scale + canvas_pad*2
+
+    img = Image.new('RGB', (canvas_w, canvas_h), (230, 230, 230))
     draw = ImageDraw.Draw(img)
 
-    for i in range(64):
-        print( pixels[64*i:64*i+64] )
+    # reconstruct imgs
+    for i in range(txt_len):
+        x = canvas_pad + canvas_pad*i + img_w*scale*i
+        y = canvas_pad
+        for j in range(len(pixels)):
+            rgb = (255, 255, 255) if pixels[j] == '1' else (0, 0, 0)
+            row = j // img_h
+            col = j % img_w
 
+            draw.rectangle([x+col*scale, y+row*scale,  x+col*scale+scale-1, y+row*scale+scale-1],
+                fill=rgb)
+
+    #
     r, g, b = 255, 162, 0
-    x, y = 0, 0
 
-    # reconstruct img
-    for i in range(len(pixels)):
-        rgb = (255, 255, 255) if pixels[i] == '1' else (0, 0, 0)
-        row = i // img_h
-        col = i % img_w
+    for i in range(txt_len):
+        x = canvas_pad + canvas_pad*i + img_w*scale*i
+        y = canvas_pad
 
-        draw.rectangle([x+col*scale, y+row*scale,  x+col*scale+scale-1, y+row*scale+scale-1],
-            fill=rgb)
+        for j in range(len(pixels) // img_word_len):
+            col = j % (img_w // img_word_len)
+            row = j // (img_w // img_word_len)
+
+            x0 = x+col*img_word_len*scale 
+            y0 = y + row*scale
+            x1 = x+col*img_word_len*scale + img_word_len*scale - 1 
+            y1 = y+scale - 1 + row*scale
+
+            draw.rectangle([x0, y0, x1, y1], outline=(r,g,b))
 
     img.save(img_name+'.png')
 
@@ -409,7 +430,7 @@ def view_attn():
         batch_size = len(view_batch)
         view_input_ids = torch.tensor(view_batch)
         
-        i = 5
+        i = 0
         txt_len = 3
         img_word_len = 8
         img_w = 64
@@ -425,9 +446,9 @@ def view_attn():
         img_name = ' '.join(data[i][:txt_len])
         pixels = ''.join(data[i][txt_len:])
 
-        draw_attn(img_name, pixels, img_w, img_h, img_word_len)
+        draw_attn(img_name, pixels, img_w, img_h, img_word_len, txt_len)
         
 
 if __name__ == '__main__':
-    train()
+    view_attn()
 
