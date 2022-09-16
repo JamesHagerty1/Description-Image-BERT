@@ -380,7 +380,6 @@ def train():
 
 def draw_attn(attn, img_name, pixels, img_w, img_h, img_word_len, txt_len):
     print(img_name)
-    print(attn.shape)
     
     scale = 10
     canvas_pad = 80
@@ -444,7 +443,6 @@ def view_attn():
         batch_size = len(view_batch)
         view_input_ids = torch.tensor(view_batch)
         
-        i = 0
         txt_len = 3
         img_word_len = 8
         img_w = 64
@@ -453,10 +451,10 @@ def view_attn():
         model = torch.load('ImgBert')
         _, attn = model(view_input_ids, None)
 
-        img_name = ' '.join(data[i][:txt_len])
-        pixels = ''.join(data[i][txt_len:])
-
-        draw_attn(attn[i], img_name, pixels, img_w, img_h, img_word_len, txt_len)
+        for i in range(batch_size):
+            img_name = ' '.join(data[i][:txt_len])
+            pixels = ''.join(data[i][txt_len:])
+            draw_attn(attn[i], img_name, pixels, img_w, img_h, img_word_len, txt_len)
         
 
 if __name__ == '__main__':
