@@ -5,6 +5,7 @@ import torch.nn as nn
 import torch.optim as optim
 from pprint import pprint
 import pickle
+from PIL import Image, ImageDraw
 
 
 
@@ -29,7 +30,7 @@ d_k = d_v = 16  # d_k is for K and Q, d_v is for V
 
 vocab_size = len(ids_to_tokens)
 samples = len(data) * 2
-batch_size = samples # // 8
+batch_size = samples // 8
 maxlen = input_ids.shape[1]
 
 
@@ -272,7 +273,7 @@ class BERT(nn.Module):
             # output remains (batch size x sentence maxlen x d_model)
 
         # for cases where I only want to view attn, and no inference
-        if not masked_pos:
+        if masked_pos == None:
             return None, attn
 
         # Deal with masked words now
@@ -335,7 +336,7 @@ def train():
             # Training boilerplate
             optimizer.zero_grad()
 
-            logits_lm, attn = model(input_ids_, masked_pos_)
+            logits_lm, _ = model(input_ids_, masked_pos_)
             # (batch size x max_pred x vocab_size)
 
             logits_lm = logits_lm.transpose(1, 2)
@@ -359,9 +360,8 @@ def train():
         
         # print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
 
-
-        if avg_loss < 0.1 and avg_loss < min_avg_loss:
-            torch.save(model, 'ImgBert3')
+        if avg_loss < 0.2 and avg_loss < min_avg_loss:
+            torch.save(model, 'ImgBert')
         if avg_loss < min_avg_loss:
             min_avg_loss = avg_loss
         if avg_loss < 0.02:
@@ -378,6 +378,30 @@ def train():
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
+def draw_attn(img_name, pixels, img_w, img_h, img_word_len, scale=10):
+    print(img_name)
+    # print(pixels)
+    img = Image.new('RGB', (img_w*scale, img_h*scale), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
+
+    for i in range(64):
+        print( pixels[64*i:64*i+64] )
+
+    r, g, b = 255, 162, 0
+    x, y = 0, 0
+
+    # reconstruct img
+    for i in range(len(pixels)):
+        rgb = (255, 255, 255) if pixels[i] == '1' else (0, 0, 0)
+        row = i // img_h
+        col = i % img_w
+
+        draw.rectangle([x+col*scale, y+row*scale,  x+col*scale+scale-1, y+row*scale+scale-1],
+            fill=rgb)
+
+    img.save(img_name+'.png')
+
+
 def view_attn():
     with torch.no_grad():
         global batch_size
@@ -385,21 +409,25 @@ def view_attn():
         batch_size = len(view_batch)
         view_input_ids = torch.tensor(view_batch)
         
-        model = torch.load('ImgBert3')
-        _, attn = model(view_input_ids, None)
-
-        i = 3
+        i = 5
         txt_len = 3
+        img_word_len = 8
+        img_w = 64
+        img_h = 64
 
-        # words = data[i][:txt_len]
+        # model = torch.load('ImgBert3')
+        # _, attn = model(view_input_ids, None)
+
         # w0attn = [min(255,int(1000*t.item())) for t in attn[i][0][txt_len:]] 
         # w1attn = [min(255,int(1000*t.item())) for t in attn[i][1][txt_len:]]
         # w2attn = [min(255,int(1000*t.item())) for t in attn[i][2][txt_len:]]
 
+        img_name = ' '.join(data[i][:txt_len])
+        pixels = ''.join(data[i][txt_len:])
+
+        draw_attn(img_name, pixels, img_w, img_h, img_word_len)
         
 
-
-
 if __name__ == '__main__':
-    view_attn()
+    train()
 
