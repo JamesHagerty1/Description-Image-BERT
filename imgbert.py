@@ -15,7 +15,7 @@ tokens_to_ids = db['tokens_to_ids']
 ids_to_tokens = db['ids_to_tokens']
 batch = db['batch']
 input_ids, masked_tokens, masked_pos = map(torch.LongTensor, zip(*batch))
-
+dbfile.close()
 
 
 epochs = 100000000000
@@ -29,7 +29,7 @@ d_k = d_v = 16  # d_k is for K and Q, d_v is for V
 
 vocab_size = len(ids_to_tokens)
 samples = len(data) * 2
-batch_size = samples // 8
+batch_size = samples # // 8
 maxlen = input_ids.shape[1]
 
 
@@ -135,7 +135,7 @@ class SingleHeadAttention(nn.Module):
         # Again, LayerNorm will just tug floats closer to 0, and arg0==d_model tells
         # LayerNorm the last dim to expect from input
         # use of residual part of the math overall to learn
-        output = nn.LayerNorm(d_model)(output + residual)
+        output = nn.LayerNorm(d_model)(output + residual)                     
         # still (batch size x sentence maxlen x d_model)
 
         return output, attn 
@@ -208,11 +208,11 @@ class Embedding(nn.Module):
         # embeddings matrix is (batch size x sentence maxlen x d_model)
 
         # (3) sum pos and token embeddings then normalize them
-        embedding = tok_embeddings + pos_embeddings
-        output = self.norm(embedding)    
+        output = tok_embeddings + pos_embeddings
+        output = self.norm(output)                                            
 
         # output is (batch size x sentence maxlen x d_model), just like 
-        # embedding (all it did was normalize embedding's floats)
+        # embedding (all it did was normalize floats)
 
         return output
 
@@ -271,6 +271,10 @@ class BERT(nn.Module):
             output, attn = layer(output, enc_self_attn_mask)                   # ? does EncoderLayer() return redundant second item
             # output remains (batch size x sentence maxlen x d_model)
 
+        # for cases where I only want to view attn, and no inference
+        if not masked_pos:
+            return None, attn
+
         # Deal with masked words now
         masked_pos = masked_pos[:,:,None]
         # (batch size x max_pred/mask maxcnt x 1)
@@ -294,7 +298,7 @@ class BERT(nn.Module):
         h_masked = self.linear(h_masked)
         # still (batch size x max_pred/mask maxcnt x d_model)
         h_masked = self.gelu(h_masked)
-        h_masked = self.norm(h_masked)
+        h_masked = self.norm(h_masked)                                    
         # still (batch size x max_pred/mask maxcnt x d_model)
 
         # self.decoder is a Linear(d_model, vocab_size)
@@ -372,54 +376,30 @@ def train():
         
 
 
-def test():
-    model = torch.load('ImgBert3')
-    criterion = nn.CrossEntropyLoss()
-
-    # I trained ImgBert3 with all samples as a batch, so only one iter passes
-
-    for iter in range( samples // batch_size ):
-        input_ids_ = input_ids[iter*batch_size:iter*batch_size+batch_size]
-        masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
-        masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
-
-        logits_lm, attn = model(input_ids_, masked_pos_)
-        batch_preds = logits_lm.data.max(2)[1]
-        logits_lm = logits_lm.transpose(1, 2)
-        loss_lm = criterion(logits_lm, masked_tokens_) 
-
-        batch_preds = batch_preds.tolist()
-        masked_tokens_ = masked_tokens_.tolist()
-        misses = 0
-        for pred, val in zip(batch_preds, masked_tokens_):
-            if pred != val:
-                misses += 1
-        acc = (len(batch_preds) - misses) / len(batch_preds)
-        print(f'accuracy: {acc}')
-        print(loss_lm.item())
-        print(attn.shape)
-
-
-
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-# specially for ImgBert2
 def view_attn():
-    model = torch.load('ImgBert3')
-    criterion = nn.CrossEntropyLoss()
+    with torch.no_grad():
+        global batch_size
+        view_batch = [[tokens_to_ids[tok] for tok in sent] for sent in data]
+        batch_size = len(view_batch)
+        view_input_ids = torch.tensor(view_batch)
+        
+        model = torch.load('ImgBert3')
+        _, attn = model(view_input_ids, None)
 
-    logits_lm, attn = model(input_ids, masked_pos)
-    logits_lm = logits_lm.transpose(1, 2)
-    loss_lm = criterion(logits_lm, masked_tokens) 
+        i = 3
+        txt_len = 3
 
-    print(loss_lm.item())
-    print(input_ids.shape, attn.shape)
-    
-    # for item in input_ids[0]:
-    #     print( ids_to_tokens[ item.item() ] )
+        # words = data[i][:txt_len]
+        # w0attn = [min(255,int(1000*t.item())) for t in attn[i][0][txt_len:]] 
+        # w1attn = [min(255,int(1000*t.item())) for t in attn[i][1][txt_len:]]
+        # w2attn = [min(255,int(1000*t.item())) for t in attn[i][2][txt_len:]]
+
+        
 
 
 
 if __name__ == '__main__':
-    train()
+    view_attn()
 

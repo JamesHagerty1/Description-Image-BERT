@@ -152,10 +152,7 @@ def preview_train():
 
     dbfile.close()
 
+    
 if __name__ == '__main__':
-    # make_small_cards()
-    # card_words()
-    # card_sentences()
-    # card_training_data()
-    # preview_train()
+  
     pass

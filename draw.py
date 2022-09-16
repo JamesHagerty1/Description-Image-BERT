@@ -13,7 +13,7 @@ im_w *= scale
 img_word_len *= scale
 
 
-im = Image.new('RGB', (im_w, im_h), (128, 128, 128))
+im = Image.new('RGB', (im_w, im_h), (255, 255, 255))
 print(im.size)
 draw = ImageDraw.Draw(im)
 
@@ -24,21 +24,18 @@ draw = ImageDraw.Draw(im)
 # im.save('test.png')
 
 x, y = 0, 0
+r, g, b = 250, 100, 20
+tint_factor = 0.2
 for i in range(im_w // img_word_len):
 
-    rgb = (0, 255, 0) if i % 2 == 0 else (255, 0, 0)
+    r = int(r + (255 - r) * tint_factor)
+    g = int(g + (255 - g) * tint_factor)
+    b = int(b + (255 - b) * tint_factor)
+    rgb = (r, g, b)
 
     left_offset = i * img_word_len 
     draw.rectangle([x+left_offset, y, x+left_offset+img_word_len-1, y+pix_d-1],
-                    outline=rgb)
+                    outline=rgb, fill=rgb)
 
-x, y = 0, pix_d
-for i in range(im_w // img_word_len):
-
-    rgb = (0, 255, 0) if i % 2 == 1 else (255, 0, 0)
-
-    left_offset = i * img_word_len 
-    draw.rectangle([x+left_offset, y, x+left_offset+img_word_len-1, y+pix_d-1],
-                    outline=rgb)
 
 im.save('test.png')
