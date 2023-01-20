@@ -1,0 +1,9 @@
+{
+  "vocab_size": 145,
+  "batch_size": 18,
+  "n_layers": 1,
+  "d_ff": 64,
+  "d_model": 64,
+  "d_k": 16,
+  "d_v": 16
+}

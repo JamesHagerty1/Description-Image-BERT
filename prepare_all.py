@@ -16,6 +16,7 @@ from PIL import Image
 DATA_DIR = "data/"
 IMG_PIXELS = 4096
 BIN_WORD_LEN = 8 
+BATCH_SIZE = 18
 
 # Model parameters independent of data
 N_LAYERS = 1 
@@ -24,6 +25,19 @@ D_K = D_V = 16
 
 
 ######### JSON #################################################################
+
+
+def make_config_json(vocab_size):
+    json_data = {
+        "vocab_size" : vocab_size,
+        "batch_size" : BATCH_SIZE,
+        "n_layers" : N_LAYERS,
+        "d_ff" : D_FF,
+        "d_model" : D_MODEL,
+        "d_k" : D_K,
+        "d_v" : D_V,}
+    with open("config.json", "w") as json_file:
+        json.dump(json_data, json_file, indent=2)
 
 
 def make_train_json(sentences, tokens_ids_d):
@@ -97,6 +111,7 @@ def main():
     tokens_ids_d, ids_tokens_d = make_vocabulary(sentences)
     vocab_size = len(tokens_ids_d)
     make_train_json(sentences, tokens_ids_d)
+    make_config_json(vocab_size)
 
 if __name__ == "__main__":
     main()
