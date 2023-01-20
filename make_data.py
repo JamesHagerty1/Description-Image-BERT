@@ -10,6 +10,9 @@ import os
 from PIL import Image
 
 
+################################################################################
+
+
 DATA_DIR = "data/"
 IMG_PIXELS = 4096
 BIN_WORD_LEN = 8 
@@ -18,6 +21,44 @@ BIN_WORD_LEN = 8
 N_LAYERS = 1 
 D_FF = D_MODEL = 64 
 D_K = D_V = 16 
+
+
+######### JSON HELPERS #########################################################
+
+
+def make_train_json(sentences, tokens_ids_d):
+    def masked_entry(sentence, mask_i):
+        masked_token_id = tokens_ids_d[sentence[mask_i]]
+        sentence[mask_i] = "[MASK]"
+        return {"masked_sentence" : str(sentence),
+            "masked_tokens_ids" : str([masked_token_id]), 
+            "masked_tokens_i" : str([mask_i])}
+    json_data = []
+    for sentence in sentences:
+        entry = {}
+        entry["image_sentence"] = " ".join(sentence)
+        masked_sentences = []
+        masked_entry_1 = masked_entry(sentence[:], 0)
+        masked_entry_2 = masked_entry(sentence[:], 2)
+        masked_sentences.append(masked_entry_1)
+        masked_sentences.append(masked_entry_2)
+        entry["masked_sentences"] = masked_sentences
+        json_data.append(entry)
+    with open("train.json", "w") as json_file:
+        json.dump(json_data, json_file, indent=2)
+
+
+######### PARSING HELPERS ######################################################
+
+
+def make_vocabulary(sentences):
+    tokens_ids_d = {"[MASK]" : 0}
+    for sentence in sentences:
+        for word in sentence:
+            if word not in tokens_ids_d:
+                tokens_ids_d[word] = len(tokens_ids_d)
+    ids_tokens_d = {tokens_ids_d[token] : token for token in tokens_ids_d}
+    return tokens_ids_d, ids_tokens_d
 
 
 def image_to_sentence(filename):
@@ -47,12 +88,14 @@ def make_image_sentences():
     return sentences
 
 
+################################################################################
+
+
 def main():
     sentences = make_image_sentences()
-    
-    from visual_data import card_sentence_image
-    card_sentence_image(sentences[0])
-        
+    tokens_ids_d, ids_tokens_d = make_vocabulary(sentences)
+    vocab_size = len(tokens_ids_d)
+    make_train_json(sentences, tokens_ids_d)
 
 if __name__ == "__main__":
     main()
