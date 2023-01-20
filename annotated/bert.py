@@ -218,6 +218,9 @@ class BERT(nn.Module):
         self.decoder_bias = nn.Parameter(torch.zeros(n_vocab))
 
     def forward(self, input_ids, segment_ids, masked_pos):
+        print("forward()")
+        print("input_ids ", input_ids.shape, "masked_pos ", masked_pos.shape)
+
         output = self.embedding(input_ids, segment_ids)
         enc_self_attn_mask = get_attn_pad_mask(input_ids, input_ids)
         for layer in self.layers:
@@ -254,10 +257,8 @@ input_ids, segment_ids, masked_tokens, masked_pos, isNext = map(torch.LongTensor
 
 for epoch in range(100): # probably overfitting but whatever
     optimizer.zero_grad()
-    logits_lm, logits_clsf = model(input_ids, segment_ids, masked_pos)
 
-    # see here!
-    print( logits_lm.data.max(2)[1] )
+    logits_lm, logits_clsf = model(input_ids, segment_ids, masked_pos)
 
     loss_lm = criterion(logits_lm.transpose(1, 2), masked_tokens) # for masked LM
     loss_lm = (loss_lm.float()).mean()
@@ -267,46 +268,52 @@ for epoch in range(100): # probably overfitting but whatever
     print('Epoch:', '%04d' % (epoch + 1), 'cost =', '{:.6f}'.format(loss))
     loss.backward()
     optimizer.step()
+
+    break # TEMP
 print('\n')
 
-# Predict mask tokens and isNext
-input_ids, segment_ids, masked_tokens, masked_pos, isNext = map(torch.LongTensor, zip(batch[0]))
-
-sents_with_masks = [number_dict[i.item()] for i in input_ids[0] if number_dict[i.item()] != '[PAD]']
-
-logits_lm, logits_clsf = model(input_ids, segment_ids, masked_pos)
-logits_lm = logits_lm.data.max(2)[1][0].data.numpy()      # get predictions per masks lot
-
-masked_token_ids = [pos.item() for pos in masked_tokens[0] if pos.item() != 0]
-masked_token_pred_ids = [pos.item() for pos in logits_lm][:len(masked_token_ids)]
-
-actual_sents = []
-pred_sents = []
-filled = 0
-# words get mismatched for actual_sents because the make_batch does random order of indices smh
-for word in sents_with_masks:
-    if word == '[MASK]':
-        actual_sents.append( number_dict[ masked_token_ids[filled] ] )
-        pred_sents.append( number_dict[ masked_token_pred_ids[filled] ] )
-        filled += 1
-    else:
-        actual_sents.append(word)
-        pred_sents.append(word)
 
 
-# "Actual sentence is often wrong"
-#
-print('Predicted for')
-print( ' '.join(sents_with_masks) )
-print('Actual sentence')
-print( ' '.join(actual_sents) )
-print('Prediction')
-print( ' '.join(pred_sents) )
 
 
-# # Next sentence prediction will remain in training/loss, but ignore res for now
-# print(logits_clsf)
-# logits_clsf = logits_clsf.data.max(1)[1].data.numpy()[0]  # change idx 0?
-# print('isNext : ', True if isNext else False)
-# print('predict isNext : ',True if logits_clsf else False)
+# # Predict mask tokens and isNext
+# input_ids, segment_ids, masked_tokens, masked_pos, isNext = map(torch.LongTensor, zip(batch[0]))
+
+# sents_with_masks = [number_dict[i.item()] for i in input_ids[0] if number_dict[i.item()] != '[PAD]']
+
+# logits_lm, logits_clsf = model(input_ids, segment_ids, masked_pos)
+# logits_lm = logits_lm.data.max(2)[1][0].data.numpy()      # get predictions per masks lot
+
+# masked_token_ids = [pos.item() for pos in masked_tokens[0] if pos.item() != 0]
+# masked_token_pred_ids = [pos.item() for pos in logits_lm][:len(masked_token_ids)]
+
+# actual_sents = []
+# pred_sents = []
+# filled = 0
+# # words get mismatched for actual_sents because the make_batch does random order of indices smh
+# for word in sents_with_masks:
+#     if word == '[MASK]':
+#         actual_sents.append( number_dict[ masked_token_ids[filled] ] )
+#         pred_sents.append( number_dict[ masked_token_pred_ids[filled] ] )
+#         filled += 1
+#     else:
+#         actual_sents.append(word)
+#         pred_sents.append(word)
+
+
+# # "Actual sentence is often wrong"
+# #
+# print('Predicted for')
+# print( ' '.join(sents_with_masks) )
+# print('Actual sentence')
+# print( ' '.join(actual_sents) )
+# print('Prediction')
+# print( ' '.join(pred_sents) )
+
+
+# # # Next sentence prediction will remain in training/loss, but ignore res for now
+# # print(logits_clsf)
+# # logits_clsf = logits_clsf.data.max(1)[1].data.numpy()[0]  # change idx 0?
+# # print('isNext : ', True if isNext else False)
+# # print('predict isNext : ',True if logits_clsf else False)
 

@@ -333,11 +333,16 @@ def train():
             masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
             masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
+            print(input_ids_.shape)
+            print(masked_pos_.shape)
+            print(masked_tokens_.shape)
+
             # Training boilerplate
             optimizer.zero_grad()
 
             logits_lm, _ = model(input_ids_, masked_pos_)
             # (batch size x max_pred x vocab_size)
+
 
             logits_lm = logits_lm.transpose(1, 2)
             # (batch size x vocab_size x max_pred)
@@ -356,9 +361,11 @@ def train():
             loss_lm.backward()
             optimizer.step()
 
+            return # TEMP
+
         avg_loss /= (samples // batch_size)
         
-        # print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
+        print('Epoch:', '%12d' % (epoch + 1), 'cost =', '{:.6f}'.format(avg_loss))
 
         if avg_loss < 0.2 and avg_loss < min_avg_loss:
             torch.save(model, 'ImgBert')
@@ -458,5 +465,5 @@ def view_attn():
         
 
 if __name__ == '__main__':
-    view_attn()
+    train()
 
