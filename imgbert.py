@@ -333,9 +333,7 @@ def train():
             masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
             masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
-            print(input_ids_.shape)
-            print(masked_pos_.shape)
-            print(masked_tokens_.shape)
+            print(input_ids)
 
             # Training boilerplate
             optimizer.zero_grad()

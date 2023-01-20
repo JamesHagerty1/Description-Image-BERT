@@ -25,7 +25,7 @@ class CardSentenceDataset(Dataset):
                     self.masked_ids.append(
                         eval(masked_entry["masked_tokens_ids"]))
                     self.masked_i.append(eval(masked_entry["masked_tokens_i"]))
-                    
+
     def __getitem__(self, index):
         return self.sentences[index], self.masked_ids[index], \
             self.masked_i[index]
@@ -37,7 +37,7 @@ class CardSentenceDataset(Dataset):
 ######## Card images as sentences dataloader ###################################
 
 
-def init_dataloader():
+def init_dataloader(batch_size):
     dataset = CardSentenceDataset()
-    dataloader = DataLoader(dataset, batch_size=5)
+    dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
