@@ -333,6 +333,8 @@ def train():
             masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
             masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
+            print("INPUT IDS:")
+            print(input_ids.shape)
             print(input_ids)
 
             # Training boilerplate

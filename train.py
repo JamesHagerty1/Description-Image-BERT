@@ -21,7 +21,7 @@ def main():
     
     for i, batch in enumerate(dataloader):
         x, y, y_i = batch
-
+        print(i)
         # Fix dataloader, it is wrong
 
         break
