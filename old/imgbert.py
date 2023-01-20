@@ -15,8 +15,11 @@ data = db['data']
 tokens_to_ids = db['tokens_to_ids']
 ids_to_tokens = db['ids_to_tokens']
 batch = db['batch']
+print(len(batch), len(batch[0]), len(batch[0][0]), len(batch[0][1]), len(batch[0][2]))
 input_ids, masked_tokens, masked_pos = map(torch.LongTensor, zip(*batch))
 dbfile.close()
+print(len(input_ids), len(masked_tokens), len(masked_pos))
+print(input_ids.shape)
 
 
 epochs = 100000000000
@@ -333,9 +336,6 @@ def train():
             masked_pos_ = masked_pos[iter*batch_size:iter*batch_size+batch_size]
             masked_tokens_ = masked_tokens[iter*batch_size:iter*batch_size+batch_size]
 
-            print("INPUT IDS:")
-            print(input_ids.shape)
-            print(input_ids)
 
             # Training boilerplate
             optimizer.zero_grad()

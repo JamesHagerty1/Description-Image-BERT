@@ -1,5 +1,5 @@
 import json
-from dataloader import init_dataloader
+from data import init_dataloader
 # from model import BERT
 
 
@@ -21,8 +21,8 @@ def main():
     
     for i, batch in enumerate(dataloader):
         x, y, y_i = batch
-        print(i)
-        # Fix dataloader, it is wrong
+        print(x.shape, y.shape, y_i.shape)
+        
 
         break
 
