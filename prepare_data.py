@@ -31,12 +31,13 @@ def make_train_json(sentences, tokens_ids_d):
         masked_token_id = tokens_ids_d[sentence[mask_i]]
         sentence[mask_i] = "[MASK]"
         return {"masked_sentence" : str(sentence),
+            "masked_tokens" : str([tokens_ids_d[token] for token in sentence]),
             "masked_tokens_ids" : str([masked_token_id]), 
             "masked_tokens_i" : str([mask_i])}
     json_data = []
     for sentence in sentences:
         entry = {}
-        entry["image_sentence"] = " ".join(sentence)
+        entry["image_sentence"] = str(sentence)
         masked_sentences = []
         masked_entry_1 = masked_entry(sentence[:], 0)
         masked_entry_2 = masked_entry(sentence[:], 2)

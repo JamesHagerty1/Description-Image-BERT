@@ -1,4 +1,11 @@
+import json
 from torch.utils.data import Dataset, DataLoader
+
+
+################################################################################
+
+
+TRAIN_FILE = "train.json"
 
 
 ######## Card images as sentences dataset ###################################### 
@@ -6,21 +13,31 @@ from torch.utils.data import Dataset, DataLoader
 
 class CardSentenceDataset(Dataset):
     def __init__(self):
-        self.masked_sentences = [42]
-
-    def __index__(self, index):
-        return self.masked_sentences[index]
+        global TRAIN_FILE
+        self.sentences = []
+        self.masked_ids = []
+        self.masked_i = []
+        with open(TRAIN_FILE) as json_file:
+            json_data = json.load(json_file)
+            for card_entry in json_data:
+                for masked_entry in card_entry["masked_sentences"]:
+                    self.sentences.append(eval(masked_entry["masked_tokens"]))
+                    self.masked_ids.append(
+                        eval(masked_entry["masked_tokens_ids"]))
+                    self.masked_i.append(eval(masked_entry["masked_tokens_i"]))
+                    
+    def __getitem__(self, index):
+        return self.sentences[index], self.masked_ids[index], \
+            self.masked_i[index]
 
     def __len__(self):
-        return len(self.masked_sentences)
+        return len(self.sentences)
 
 
-################################################################################
+######## Card images as sentences dataloader ###################################
 
 
-def main():
-    dset = CardSentenceDataset()
-    print('hi')
-
-if __name__ == "__main__":
-    main()
+def init_dataloader():
+    dataset = CardSentenceDataset()
+    dataloader = DataLoader(dataset, batch_size=5)
+    return dataloader
