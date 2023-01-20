@@ -23,7 +23,7 @@ D_FF = D_MODEL = 64
 D_K = D_V = 16 
 
 
-######### JSON HELPERS #########################################################
+######### JSON #################################################################
 
 
 def make_train_json(sentences, tokens_ids_d):
@@ -48,7 +48,7 @@ def make_train_json(sentences, tokens_ids_d):
         json.dump(json_data, json_file, indent=2)
 
 
-######### PARSING HELPERS ######################################################
+######### PARSING ##############################################################
 
 
 def make_vocabulary(sentences):

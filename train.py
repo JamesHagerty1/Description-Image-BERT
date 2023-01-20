@@ -1,8 +1,8 @@
-from model import BERT
+# from model import BERT
 
 
 def main():
-    model = BERT()
+    # model = BERT()
 
 if __name__ == "__main__":
     main()
