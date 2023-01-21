@@ -73,7 +73,7 @@ def trinary_image_tokens(input_path):
 
 
 def vocabulary_json(add_tokens):
-    """TBD -- revise for vocabulary appending"""
+    """TBD -- revise for vocabulary appending, like json_dataset_append()"""
     token_to_id = {"[PAD]" : 0, "[MASK]" : 1, "[DESC]" : 2, "[IMG]" : 3}
     for token in add_tokens:
         if token not in token_to_id:
@@ -129,6 +129,7 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
     if (not os.path.isfile(dataset_path)):
         with open(dataset_path, "w") as json_file:
             json.dump([], json_file, indent=2)
+    # Append to dataset
     with open(dataset_path) as json_file:
         json_data = json.load(json_file)
     # Format for model input (but as tokens rather than their integer ids)
@@ -144,11 +145,12 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
     tokens_ids = [token_to_id[token] for token in tokens]
     masked_tokens_ids = [token_to_id[token] for token in masked_tokens]
     masked_ids = [tokens_ids[i+1] for i in masked_indices] # i=0 "[DESC]"
+    masked_indices = masked_indices[:]
+    masked_indices = [i + 1 for i in masked_indices] # i=0 "[DESC]"
     json_data.append({"tokens" : str(tokens), 
-        "masked_tokens" : str(masked_tokens), 
+        "masked_tokens" : str(masked_tokens), "tokens_ids" : str(tokens_ids),
         "masked_tokens_ids" : str(masked_tokens_ids), 
-        "masked_ids" : str(masked_ids)
-        })
+        "masked_indices" : str(masked_indices), "masked_ids" : str(masked_ids)})
     with open(dataset_path, "w") as json_file:
         json.dump(json_data, json_file, indent=2)
 

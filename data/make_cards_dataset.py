@@ -38,7 +38,7 @@ def main():
         description_tokens = filename.replace(".png", "").split("_")
         image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
         json_dataset_append(JSON_PATH, description_tokens, image_tokens, [0])
-        break
+        json_dataset_append(JSON_PATH, description_tokens, image_tokens, [2])
 
 if __name__ == "__main__":
     main()
