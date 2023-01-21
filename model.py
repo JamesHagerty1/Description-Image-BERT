@@ -10,6 +10,6 @@ class BERT(nn.Module):
         super(BERT, self).__init__()
 
     def forward(self, x, y_i):
-        print("forward")
+        print("* forward()")
         print(x.shape, y_i.shape)
         return -1
