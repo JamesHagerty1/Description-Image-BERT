@@ -17,7 +17,6 @@ def main():
         input_path = f"{IMAGES_DIR}{filename}"
         output_path = f"{DATASET_DIR}{filename}"
         standardize_image(input_path, output_path)
-        break
 
 if __name__ == "__main__":
     main()
