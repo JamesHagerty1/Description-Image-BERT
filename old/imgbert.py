@@ -247,13 +247,15 @@ class BERT(nn.Module):
         pad_token_id = -1                 # currently using a dict that has no pad token / pad token id
 
         pad_attn_mask = input_ids.data.eq(pad_token_id).unsqueeze(1) 
-
+        print("YO")
+        print(pad_attn_mask.shape, input_ids.shape)
         # pad_attn_mask is (batch size x sentence maxlen), same as our batch
 
         # took old pad_attn_mask but now, per batch entry, there is an array of maxlen
         # repeated arrays of our Falses and Trues (where those arrays are also
         # of len maxlen)
         pad_attn_mask_ = pad_attn_mask.expand(batch_size, maxlen, maxlen)  
+        print(pad_attn_mask_.shape)
 
         # pad_attn_mask_ is (batch size x sentence maxlen x sentence maxlen)
 

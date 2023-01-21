@@ -1,4 +1,5 @@
 import json
+from data.processing import SPECIAL_TOKEN_TO_ID
 
 
 ################################################################################
@@ -26,15 +27,10 @@ class AttrDict(dict):
 def config_json():
     with open("./data/vocabulary.json") as json_file:
         vocab = json.load(json_file)
-    json_data = {
-        "vocab_size" : len(vocab["token_to_id"]),
-        "batch_size" : BATCH_SIZE,
-        "epochs" : EPOCHS,
-        "n_layers" : N_LAYERS,
-        "d_ff" : D_FF,
-        "d_model" : D_MODEL,
-        "d_k" : D_K,
-        "d_v" : D_V,}
+    json_data = {"vocab_size" : len(vocab["token_to_id"]),
+        "batch_size" : BATCH_SIZE, "epochs" : EPOCHS, "n_layers" : N_LAYERS,
+        "d_ff" : D_FF, "d_model" : D_MODEL, "d_k" : D_K, "d_v" : D_V,
+        "pad_token_id" : SPECIAL_TOKEN_TO_ID["[PAD]"]}
     with open("config.json", "w") as json_file:
         json.dump(json_data, json_file, indent=2)
 

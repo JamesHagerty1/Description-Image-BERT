@@ -19,7 +19,6 @@ def main():
         json_data = json_file.read()
     config = json.loads(json_data) 
     c = AttrDict(config) # config, concise JSON object access syntax
-    print(c)
 
     model = BERT(c)
     dataloader = init_dataloader(DATASET_PATH, c.batch_size)

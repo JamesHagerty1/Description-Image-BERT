@@ -6,5 +6,6 @@
   "d_ff": 64,
   "d_model": 64,
   "d_k": 16,
-  "d_v": 16
+  "d_v": 16,
+  "pad_token_id": 2
 }

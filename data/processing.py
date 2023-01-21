@@ -24,6 +24,7 @@ BLACK = 0
 GRAY = 128
 WHITE = 255
 
+SPECIAL_TOKEN_TO_ID = {"[DESC]" : 0, "[MASK]" : 1, "[PAD]" : 2, "[IMG]" : 3}
 VOCAB_JSON_PATH = "./vocabulary.json"
 
 DESC_MAX_LEN = 16
@@ -75,7 +76,7 @@ def trinary_image_tokens(input_path):
 
 def vocabulary_json(add_tokens):
     """TBD -- revise for vocabulary appending, like json_dataset_append()"""
-    token_to_id = {"[DESC]" : 0, "[MASK]" : 1, "[PAD]" : 2, "[IMG]" : 3}
+    token_to_id = SPECIAL_TOKEN_TO_ID
     for token in add_tokens:
         if token not in token_to_id:
             token_to_id[token] = len(token_to_id)
