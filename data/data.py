@@ -4,6 +4,9 @@
 """
 
 
+import numpy as np
+import json
+from matplotlib import pyplot as plt
 from PIL import Image as im
 
 
@@ -30,46 +33,62 @@ def crop():
 
 def standardize_image(input_path, output_path):
     global BLACK_MAX, WHITE_MIN, BLACK, GRAY, WHITE
-    def trinary_brightness(brightness):
+    def brightness_bucket(brightness):
         if (brightness <= BLACK_MAX): return BLACK
         elif (BLACK_MAX < brightness < WHITE_MIN): return GRAY
         else: return WHITE
     image = im.open(input_path)
     image = image.resize((IMG_DIM, IMG_DIM))
     image = image.convert("L") # grayscale
-    image = image.point(lambda brightness: trinary_brightness(brightness))
+    image = image.point(lambda brightness: brightness_bucket(brightness))
     image.save(output_path)
 
 
 ################################################################################
 
 
-def trinary_image_sentence(input_path):
+def trinary_image_tokens(input_path):
     global BLACK, GRAY, WHITE
-    print(input_path)
     image = im.open(input_path)
-    rows, cols = image.size
-    grayscale_pixels = image.load()
-    grayscale_to_trinary = {BLACK : "0", GRAY : "1", WHITE : "2"}
-    trinary_pixels = [grayscale_to_trinary[grayscale_pixels[c, r]] 
-        for r in range(rows) for c in range(cols)]
-    print(len(trinary_pixels))
-    # TBD, sentence itself
+    pixels = np.array(image)
+    for brightness, trinary_pixel in [(BLACK, 0), (GRAY, 1), (WHITE, 2)]:
+        pixels = np.where(pixels == brightness, trinary_pixel, pixels)
+    sentence = []
+    for r in range(0, IMG_DIM, IMG_WORD_DIM):
+        for c in range(0, IMG_DIM, IMG_WORD_DIM):
+            token = ''.join(
+                pixels[r:r+IMG_WORD_DIM,c:c+IMG_WORD_DIM].flatten().astype(str))
+            sentence.append(token)
+    return sentence
 
 
 ################################################################################
 
 
-def vocabulary_json(words):
+def vocabulary_json(add_tokens):
     token_to_id = {"[PAD]" : 0, "[MASK]" : 1, "[DESC]" : 2, "[IMG]" : 3}
-
+    for token in add_tokens:
+        if token not in token_to_id:
+            token_to_id[token] = len(token_to_id)
     id_to_token = {token_to_id[k] : k for k in token_to_id}
     json_data = {"token_to_id" : token_to_id, "id_to_token" : id_to_token}
 
 
 ################################################################################
+
+
+def tokens_image(tokens):
+    print(tokens)
+
+
+
+################################################################################
+
+
 def main():
-    standardize_image("./images/dog.png", "./images/test.png")
+    standardize_image("./images/dog.png", "./images/trinary_dog.png")
+    tokens = trinary_image_tokens("./images/trinary_dog.png")
+    tokens_image(tokens)
 
 if __name__ == "__main__":
     main()

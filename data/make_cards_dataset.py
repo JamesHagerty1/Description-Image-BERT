@@ -4,7 +4,7 @@
 
 
 import os
-from preprocessing import standardize_image, trinary_image_sentence, vocabulary_json
+from data import standardize_image, trinary_image_tokens, vocabulary_json
 
 
 ################################################################################
@@ -18,19 +18,19 @@ DATASET_DIR = "./cards_dataset/"
 
 
 def main():
-    # # Images
-    # for filename in os.listdir(IMAGES_DIR):
-    #     input_path = f"{IMAGES_DIR}{filename}"
-    #     output_path = f"{DATASET_DIR}{filename}"
-    #     standardize_image(input_path, output_path)
+    # Images
+    for filename in os.listdir(IMAGES_DIR):
+        input_path = f"{IMAGES_DIR}{filename}"
+        output_path = f"{DATASET_DIR}{filename}"
+        standardize_image(input_path, output_path)
     # Vocabulary
-    words = set()
+    tokens = set()
     for filename in os.listdir(DATASET_DIR):
         cardname = filename.replace(".png", "")
-        words |= set(cardname.split("_"))
-        sentence = trinary_image_sentence(f"{DATASET_DIR}/{filename}")
-        break
-    print(words)
+        tokens |= set(cardname.split("_"))
+        sentence = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
+        tokens |= set(sentence)
+    vocabulary_json(tokens)
 
 if __name__ == "__main__":
     main()
