@@ -260,7 +260,7 @@ class BERT(nn.Module):
         return pad_attn_mask_
 
     def forward(self, input_ids, masked_pos):
-
+        
         # input_ids is (batch size x sentence maxlen)
         # masked_pos is (batch size x mask maxcnt/max_pred)
 
