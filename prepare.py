@@ -27,6 +27,13 @@ D_K = D_V = 16
 ######### JSON #################################################################
 
 
+# More concise syntax to access JSON fields
+class AttrDict(dict):
+    def __init__(self, *args, **kwargs):
+        super(AttrDict, self).__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
 def make_config_json(vocab_size):
     json_data = {
         "vocab_size" : vocab_size,
