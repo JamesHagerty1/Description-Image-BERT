@@ -72,7 +72,9 @@ def vocabulary_json(add_tokens):
             token_to_id[token] = len(token_to_id)
     id_to_token = {token_to_id[k] : k for k in token_to_id}
     json_data = {"token_to_id" : token_to_id, "id_to_token" : id_to_token}
-
+    with open("vocabulary.json", "w") as json_file:
+        json.dump(json_data, json_file, indent=2)
+        
 
 ################################################################################
 
