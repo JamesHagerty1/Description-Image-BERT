@@ -24,6 +24,8 @@ BLACK = 0
 GRAY = 128
 WHITE = 255
 
+VOCAB_JSON_PATH = "./vocabulary.json"
+
 DESC_MAX_LEN = 16
 
 
@@ -71,13 +73,14 @@ def trinary_image_tokens(input_path):
 
 
 def vocabulary_json(add_tokens):
+    """TBD -- revise for vocabulary appending"""
     token_to_id = {"[PAD]" : 0, "[MASK]" : 1, "[DESC]" : 2, "[IMG]" : 3}
     for token in add_tokens:
         if token not in token_to_id:
             token_to_id[token] = len(token_to_id)
     id_to_token = {token_to_id[k] : k for k in token_to_id}
     json_data = {"token_to_id" : token_to_id, "id_to_token" : id_to_token}
-    with open("vocabulary.json", "w") as json_file:
+    with open(VOCAB_JSON_PATH, "w") as json_file:
         json.dump(json_data, json_file, indent=2)
 
 
@@ -128,12 +131,24 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
             json.dump([], json_file, indent=2)
     with open(dataset_path) as json_file:
         json_data = json.load(json_file)
+    # Format for model input (but as tokens rather than their integer ids)
     tokens = input_tokens(description_tokens, image_tokens)
+    # Show json viewer where masks fall on tokens for readability
     masked_tokens = tokens[:]
     for i in masked_indices:
-        masked_tokens[i+1] = "[MASK]" # index 0 has "[DESC]"
+        masked_tokens[i+1] = "[MASK]" # i=0 "[DESC]"
+    # Model inputs
+    with open(VOCAB_JSON_PATH) as json_file:
+        vocab = json.load(json_file)
+    token_to_id = vocab["token_to_id"]
+    tokens_ids = [token_to_id[token] for token in tokens]
+    masked_tokens_ids = [token_to_id[token] for token in masked_tokens]
+    masked_ids = [tokens_ids[i+1] for i in masked_indices] # i=0 "[DESC]"
     json_data.append({"tokens" : str(tokens), 
-        "masked_tokens" : str(masked_tokens),})
+        "masked_tokens" : str(masked_tokens), 
+        "masked_tokens_ids" : str(masked_tokens_ids), 
+        "masked_ids" : str(masked_ids)
+        })
     with open(dataset_path, "w") as json_file:
         json.dump(json_data, json_file, indent=2)
 
