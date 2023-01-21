@@ -23,6 +23,8 @@ BLACK = 0
 GRAY = 128
 WHITE = 255
 
+DESC_MAX_LEN = 16
+
 
 ################################################################################
 
@@ -50,7 +52,9 @@ def standardize_image(input_path, output_path):
 def trinary_image_tokens(input_path):
     global BLACK, GRAY, WHITE
     image = im.open(input_path)
+    assert (image.size == (IMG_DIM, IMG_DIM)), "Incorrect image dims"
     pixels = np.array(image)
+    assert (set(pixels.flatten()) == {BLACK, GRAY, WHITE}), "Non-trinary image"
     for brightness, trinary_pixel in [(BLACK, 0), (GRAY, 1), (WHITE, 2)]:
         pixels = np.where(pixels == brightness, trinary_pixel, pixels)
     sentence = []
@@ -74,23 +78,44 @@ def vocabulary_json(add_tokens):
     json_data = {"token_to_id" : token_to_id, "id_to_token" : id_to_token}
     with open("vocabulary.json", "w") as json_file:
         json.dump(json_data, json_file, indent=2)
-        
+
 
 ################################################################################
 
 
-def tokens_matrix(tokens):
+def input_tokens(description_tokens, image_tokens):
+    assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
+    assert (len(image_tokens) == (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)), \
+        "Too few image tokens"
+    for token in image_tokens:
+        assert (len(token) == (IMG_WORD_DIM ** 2)), "Wrong image token length"
+        s = set(list(token)).union({"0", "1", "2"})
+        assert (len(s) == 3), "Invalid image token"
+    tokens = ["[DESC]"]
+    description_tokens = description_tokens[:]
+    while (len(description_tokens) < DESC_MAX_LEN):
+        description_tokens.append("[PAD]")
+    tokens.extend(description_tokens)
+    tokens.append("[IMG]")
+    tokens.extend(image_tokens)
+    return tokens
+
+
+################################################################################
+
+
+def tokens_matrix(image_tokens):
     matrix = np.zeros((IMG_DIM, IMG_DIM))
-    for i, token in enumerate(tokens):
+    for i, token in enumerate(image_tokens):
         token_matrix = np.array(list(token)).astype(int).reshape((3, 3))
-        r = IMG_WORD_DIM * (i // (IMG_DIM // IMG_WORD_DIM))  # top
+        r = IMG_WORD_DIM * (i // (IMG_DIM // IMG_WORD_DIM)) # top
         c = (i * IMG_WORD_DIM) % IMG_DIM # left
         matrix[r:r+IMG_WORD_DIM,c:c+IMG_WORD_DIM] = token_matrix
     return matrix
 
 
-def tokens_image(tokens, output_path):
-    matrix = tokens_matrix(tokens)
+def tokens_image(image_tokens, output_path):
+    matrix = tokens_matrix(image_tokens)
     plt.figure(figsize=(5,5))
     plt.imsave(output_path, matrix)
 
