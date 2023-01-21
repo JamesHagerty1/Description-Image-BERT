@@ -30,8 +30,8 @@ class ImageSentenceDataset(Dataset):
 ######## Card images as sentences dataloader ###################################
 
 
-def init_dataloader(batch_size):
-    dataset = ImageSentenceDataset()
+def init_dataloader(dataset_path, batch_size):
+    dataset = ImageSentenceDataset(dataset_path)
     dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
 

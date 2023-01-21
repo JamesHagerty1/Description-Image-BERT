@@ -1,6 +1,7 @@
 {
-  "vocab_size": 145,
+  "vocab_size": 677,
   "batch_size": 18,
+  "epochs": 100,
   "n_layers": 1,
   "d_ff": 64,
   "d_model": 64,

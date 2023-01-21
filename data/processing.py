@@ -27,6 +27,7 @@ WHITE = 255
 VOCAB_JSON_PATH = "./vocabulary.json"
 
 DESC_MAX_LEN = 16
+DESC_MAX_MASKS = 16 # <= DESC_MAX_LEN
 
 
 ################################################################################
@@ -74,7 +75,7 @@ def trinary_image_tokens(input_path):
 
 def vocabulary_json(add_tokens):
     """TBD -- revise for vocabulary appending, like json_dataset_append()"""
-    token_to_id = {"[PAD]" : 0, "[MASK]" : 1, "[DESC]" : 2, "[IMG]" : 3}
+    token_to_id = {"[DESC]" : 0, "[MASK]" : 1, "[PAD]" : 2, "[IMG]" : 3}
     for token in add_tokens:
         if token not in token_to_id:
             token_to_id[token] = len(token_to_id)
@@ -145,8 +146,12 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
     tokens_ids = [token_to_id[token] for token in tokens]
     masked_tokens_ids = [token_to_id[token] for token in masked_tokens]
     masked_ids = [tokens_ids[i+1] for i in masked_indices] # i=0 "[DESC]"
+    while (len(masked_ids) < DESC_MAX_MASKS):
+        masked_ids.append(0) # "[DESC]" id 0 (filler/ mask)
     masked_indices = masked_indices[:]
     masked_indices = [i + 1 for i in masked_indices] # i=0 "[DESC]"
+    while (len(masked_indices) < DESC_MAX_MASKS):
+        masked_indices.append(0) # "[DESC]" always at index 0 (filler mask)
     json_data.append({"tokens" : str(tokens), 
         "masked_tokens" : str(masked_tokens), "tokens_ids" : str(tokens_ids),
         "masked_tokens_ids" : str(masked_tokens_ids), 

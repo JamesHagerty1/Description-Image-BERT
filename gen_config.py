@@ -6,10 +6,8 @@ from PIL import Image
 ################################################################################
 
 
-DATA_DIR = "data/"
-IMG_PIXELS = 4096
-BIN_WORD_LEN = 8 
 BATCH_SIZE = 18
+EPOCHS = 100
 
 # Model parameters independent of data
 N_LAYERS = 1 
@@ -27,10 +25,13 @@ class AttrDict(dict):
         self.__dict__ = self
 
 
-def config_json(vocab_size):
+def config_json():
+    with open("./data/vocabulary.json") as json_file:
+        vocab = json.load(json_file)
     json_data = {
-        "vocab_size" : vocab_size,
+        "vocab_size" : len(vocab["token_to_id"]),
         "batch_size" : BATCH_SIZE,
+        "epochs" : EPOCHS,
         "n_layers" : N_LAYERS,
         "d_ff" : D_FF,
         "d_model" : D_MODEL,
@@ -44,7 +45,7 @@ def config_json(vocab_size):
 
 
 def main():
-    pass
+    config_json()
 
 if __name__ == "__main__":
     main()

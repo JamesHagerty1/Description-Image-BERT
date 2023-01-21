@@ -263,12 +263,9 @@ def main():
         optimizer.zero_grad()
         logits_lm, logits_clsf = model(input_ids, segment_ids, masked_pos)
 
-        print(masked_pos.shape)
         print(masked_pos[0])
-        print(masked_tokens.shape)
         print(masked_tokens[0])
-        print(logits_lm.shape)
-        print(logits_lm[0])
+        
         return
 
         loss_lm = criterion(logits_lm.transpose(1, 2), masked_tokens) # for masked LM
