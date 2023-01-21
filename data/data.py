@@ -5,6 +5,7 @@
 
 
 import numpy as np
+import os
 import json
 from matplotlib import pyplot as plt
 from PIL import Image as im
@@ -83,14 +84,19 @@ def vocabulary_json(add_tokens):
 ################################################################################
 
 
-def input_tokens(description_tokens, image_tokens):
-    assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
+def valid_image_tokens(image_tokens):
     assert (len(image_tokens) == (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)), \
         "Too few image tokens"
     for token in image_tokens:
         assert (len(token) == (IMG_WORD_DIM ** 2)), "Wrong image token length"
         s = set(list(token)).union({"0", "1", "2"})
-        assert (len(s) == 3), "Invalid image token"
+        assert (len(s) == 3), "Not a trinary image token"
+    return True 
+
+
+def input_tokens(description_tokens, image_tokens):
+    assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
+    assert (valid_image_tokens(image_tokens)), "Invalid image tokens"
     tokens = ["[DESC]"]
     description_tokens = description_tokens[:]
     while (len(description_tokens) < DESC_MAX_LEN):
@@ -100,6 +106,17 @@ def input_tokens(description_tokens, image_tokens):
     tokens.extend(image_tokens)
     return tokens
 
+
+def json_dataset_append(dataset_path, description_tokens, image_tokens, 
+    masked_indices):
+    """Used to iteratively create datasets tailored to this model"""
+    assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
+    assert (len(masked_indices) <= len(description_tokens)), "Too many masks"
+    assert (valid_image_tokens(image_tokens)), "Invalid image tokens"
+    assert (dataset_path.endswith(".json")), "Non-json dataset file"
+    if (not os.path.isfile(dataset_path)):
+        with open(dataset_path, "w") as json_file:
+            json.dump([], json_file, indent=2)
 
 ################################################################################
 

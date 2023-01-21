@@ -4,7 +4,8 @@
 
 
 import os
-from data import standardize_image, trinary_image_tokens, vocabulary_json, input_tokens
+from data import standardize_image, trinary_image_tokens, vocabulary_json, \
+    input_tokens, json_dataset_append
 
 
 ################################################################################
@@ -12,6 +13,7 @@ from data import standardize_image, trinary_image_tokens, vocabulary_json, input
 
 IMAGES_DIR = "./cards/"
 DATASET_DIR = "./cards_dataset/"
+JSON_PATH = "./cards_dataset.json"
 
 
 ################################################################################
@@ -35,7 +37,7 @@ def main():
     for filename in os.listdir(DATASET_DIR):
         description_tokens = filename.replace(".png", "").split("_")
         image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
-        tokens = input_tokens(description_tokens, image_tokens)
+        json_dataset_append(JSON_PATH, description_tokens, image_tokens, [0])
         break
 
 if __name__ == "__main__":
