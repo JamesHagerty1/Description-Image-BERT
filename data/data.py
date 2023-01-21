@@ -27,7 +27,7 @@ WHITE = 255
 ################################################################################
 
 
-def crop():
+def crop(input_path, output_path):
     pass
 
 
@@ -77,9 +77,20 @@ def vocabulary_json(add_tokens):
 ################################################################################
 
 
-def tokens_image(tokens):
-    print(tokens)
+def tokens_matrix(tokens):
+    matrix = np.zeros((IMG_DIM, IMG_DIM))
+    for i, token in enumerate(tokens):
+        token_matrix = np.array(list(token)).astype(int).reshape((3, 3))
+        r = IMG_WORD_DIM * (i // (IMG_DIM // IMG_WORD_DIM))  # top
+        c = (i * IMG_WORD_DIM) % IMG_DIM # left
+        matrix[r:r+IMG_WORD_DIM,c:c+IMG_WORD_DIM] = token_matrix
+    return matrix
 
+
+def tokens_image(tokens, output_path):
+    matrix = tokens_matrix(tokens)
+    plt.figure(figsize=(5,5))
+    plt.imsave(output_path, matrix)
 
 
 ################################################################################
@@ -88,7 +99,7 @@ def tokens_image(tokens):
 def main():
     standardize_image("./images/dog.png", "./images/trinary_dog.png")
     tokens = trinary_image_tokens("./images/trinary_dog.png")
-    tokens_image(tokens)
+    tokens_image(tokens, "./images/re_trinary_dog.png")
 
 if __name__ == "__main__":
     main()
