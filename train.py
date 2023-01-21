@@ -1,5 +1,5 @@
 import json
-from data import init_dataloader
+from data_loading import init_dataloader
 from model import BERT
 from prepare import AttrDict
 

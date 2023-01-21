@@ -4,8 +4,8 @@
 
 
 import os
-from data import standardize_image, trinary_image_tokens, vocabulary_json, \
-    input_tokens, json_dataset_append
+from processing import standardize_image, trinary_image_tokens, \
+    vocabulary_json, json_dataset_append
 
 
 ################################################################################

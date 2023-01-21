@@ -84,6 +84,14 @@ def vocabulary_json(add_tokens):
 ################################################################################
 
 
+def valid_masked_indices(masked_indices, description_tokens):
+    assert (len(masked_indices) <= len(description_tokens)), "Too many masks"
+    assert (len(set(masked_indices)) == len(masked_indices)), "Repeating masks"
+    s = set(range(DESC_MAX_LEN)).union(masked_indices)
+    assert (len(s) == DESC_MAX_LEN), "Out of bounds mask indices"
+    return True
+
+
 def valid_image_tokens(image_tokens):
     assert (len(image_tokens) == (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)), \
         "Too few image tokens"
@@ -110,13 +118,25 @@ def input_tokens(description_tokens, image_tokens):
 def json_dataset_append(dataset_path, description_tokens, image_tokens, 
     masked_indices):
     """Used to iteratively create datasets tailored to this model"""
-    assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
-    assert (len(masked_indices) <= len(description_tokens)), "Too many masks"
-    assert (valid_image_tokens(image_tokens)), "Invalid image tokens"
     assert (dataset_path.endswith(".json")), "Non-json dataset file"
+    assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
+    assert (valid_image_tokens(image_tokens)), "Invalid image tokens"
+    assert(valid_masked_indices(masked_indices, description_tokens)), \
+        "Invalid masked indices"
     if (not os.path.isfile(dataset_path)):
         with open(dataset_path, "w") as json_file:
             json.dump([], json_file, indent=2)
+    with open(dataset_path) as json_file:
+        json_data = json.load(json_file)
+    tokens = input_tokens(description_tokens, image_tokens)
+    masked_tokens = tokens[:]
+    for i in masked_indices:
+        masked_tokens[i+1] = "[MASK]" # index 0 has "[DESC]"
+    json_data.append({"tokens" : str(tokens), 
+        "masked_tokens" : str(masked_tokens),})
+    with open(dataset_path, "w") as json_file:
+        json.dump(json_data, json_file, indent=2)
+
 
 ################################################################################
 
