@@ -20,23 +20,24 @@ JSON_PATH = "./cards_dataset.json"
 
 
 def main():
-    # # Images
-    # for filename in os.listdir(IMAGES_DIR):
-    #     input_path = f"{IMAGES_DIR}{filename}"
-    #     output_path = f"{DATASET_DIR}{filename}"
-    #     standardize_image(input_path, output_path)
-    # # Vocabulary (currently limited to token-words of cards dataset)
-    # tokens = set()
-    # for filename in os.listdir(DATASET_DIR):
-    #     cardname = filename.replace(".png", "")
-    #     tokens |= set(cardname.split("_"))
-    #     image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
-    #     tokens |= set(image_tokens)
-    # vocabulary_json(tokens)
+    # Images
+    for filename in os.listdir(IMAGES_DIR):
+        input_path = f"{IMAGES_DIR}{filename}"
+        output_path = f"{DATASET_DIR}{filename}"
+        standardize_image(input_path, output_path)
+    # Vocabulary (currently limited to token-words of cards dataset)
+    tokens = set()
+    for filename in os.listdir(DATASET_DIR):
+        cardname = filename.replace(".png", "")
+        tokens |= set(cardname.split("_"))
+        image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
+        tokens |= set(image_tokens)
+    vocabulary_json(tokens)
     # Data for model
     for filename in os.listdir(DATASET_DIR):
         description_tokens = filename.replace(".png", "").split("_")
         image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
+        # "8 of hearts" -> "[MASK] of hearts", "8 of [MASK]"
         json_dataset_append(JSON_PATH, description_tokens, image_tokens, [0])
         json_dataset_append(JSON_PATH, description_tokens, image_tokens, [2])
 

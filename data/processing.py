@@ -178,9 +178,14 @@ def tokens_image(image_tokens, output_path):
 
 
 def main():
-    standardize_image("./images/dog.png", "./images/trinary_dog.png")
-    tokens = trinary_image_tokens("./images/trinary_dog.png")
-    tokens_image(tokens, "./images/re_trinary_dog.png")
+    # standardize_image("./images/dog.png", "./images/trinary_dog.png")
+    # tokens = trinary_image_tokens("./images/trinary_dog.png")
+    # tokens_image(tokens, "./images/re_trinary_dog.png")
+
+    with open("./cards_dataset.json") as json_file:
+        json_data = json.load(json_file)
+    tokens = eval(json_data[0]["tokens"])[2+DESC_MAX_LEN:]
+    tokens_image(tokens, "./images/test.png")
 
 if __name__ == "__main__":
     main()
