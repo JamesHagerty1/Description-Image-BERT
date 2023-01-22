@@ -24,9 +24,9 @@ def inference(model, batch):
 
 def main():
     dataloader = init_dataloader(DATASET_PATH, 1)
-    for 
-
-    model = torch.load(f"{MODELS_DIR}ImgBert")
+    for i, batch in enumerate(dataloader):
+        x, y_i, y, desc = batch
+    model = torch.load(f"{MODELS_DIR}ImgBert-loss:0.021")
 
 if __name__ == "__main__":
     main()
