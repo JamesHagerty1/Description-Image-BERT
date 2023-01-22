@@ -1,3 +1,4 @@
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -31,8 +32,8 @@ class BERT(nn.Module):
         # x: (batch_size, seq_len, d_model)
         # Sequences are now embeddings representing tokens and their positiions
         x = self.embedding_layer(x)
-        # for layer in self.layers:
-        #     x, attn = layer(x, attn_pad_mask)  
+        for encoder_layer in self.encoder_layers:
+            x, attn = encoder_layer(x, attn_pad_mask)  
         return -1
 
 
@@ -68,16 +69,40 @@ class EncoderLayer(nn.Module):
 
     def forward(self, x, attn_pad_mask):
         x, attn = self.attn_layer(x, x, x, attn_pad_mask)
-        return -1
+        return -1, -1
 
 
-class AttentionLayer():
+class AttentionLayer(nn.Module):
     """Only has one attention head for now"""
     def __init__(self, c):
         super(AttentionLayer, self).__init__()
         self.W_Q = nn.Linear(c.d_model, c.d_k)
         self.W_K = nn.Linear(c.d_model, c.d_k)
         self.W_V = nn.Linear(c.d_model, c.d_v)
+        self.c = c
 
-    def forward(self):
-        return -1
+    def scaled_dot_product_attention(self, q, k, v, attn_pad_mask):
+        # k_T: (batch_size, d_k, seq_len)
+        k_T = k.transpose(-1, -2)
+        scores = torch.matmul(q, k_T)
+        d_k = self.c.d_k
+        # scores: (batch_size, seq_len, seq_len)
+        scores /= np.sqrt(d_k)
+        # Give scores for "[PAD]" token embeddings negligible values
+        scores.masked_fill_(attn_pad_mask, -1e9)
+        # attn: (batch_size, seq_len, seq_len)
+        # Attention is just scores softmaxxed
+        attn = nn.Softmax(dim=-1)(scores)
+        # context: (batch_size, seq_len, d_v)
+        # Context embeddings consider how much attention tokens give each other
+        context = torch.matmul(attn, v)
+        return context, attn
+
+    def forward(self, Q, K, V, attn_pad_mask):
+        # q, k, v: (batch_size, seq_len, d_k or d_v)
+        # Scale down Q, K, V (which start as the same embeddings sequences)
+        q, k, v = self.W_Q(Q), self.W_K(K), self.W_V(V)
+        context, attn = \
+            self.scaled_dot_product_attention(q, k, v, attn_pad_mask)
+
+        return -1, -1
