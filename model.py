@@ -12,10 +12,14 @@ class BERT(nn.Module):
         self.embedding_layer = EmbeddingLayer(c)
         self.encoder_layers = \
             nn.ModuleList([EncoderLayer(c) for _ in range(c.n_layers)])
+        self.linear = nn.Linear(c.d_model, c.d_model)
+        self.norm = nn.LayerNorm(c.d_model)
+        self.decoder = nn.Linear(c.d_model, c.vocab_size, bias=False)
+        self.decoder_bias = nn.Parameter(torch.zeros(c.vocab_size))
         self.c = c # config
 
     def attn_pad_mask(self, x):
-        """Used to hide [PAD] tokens during attention"""
+        """Reference to make "[PAD]" token embeddings negligible in context"""
         pad_token_id = self.c.pad_token_id
         batch_size = self.c.batch_size
         seq_len = self.c.seq_len
@@ -32,9 +36,25 @@ class BERT(nn.Module):
         # x: (batch_size, seq_len, d_model)
         # Sequences are now embeddings representing tokens and their positiions
         x = self.embedding_layer(x) # x_embs
+        # Turn x into sequences of contextual embeddings + retrieve attention
+        # used to create its contextual embeddings
         for encoder_layer in self.encoder_layers:
-            x, attn = encoder_layer(x, attn_pad_mask) # x_ctx_embs, attn
-        return -1
+            x, attn = encoder_layer(x, attn_pad_mask) 
+        # y_i: (batch_size, desc_len, d_model)
+        # Used to gather the embeddings that were masked from the contextual
+        # embeddings; y_i vectors are now matrices where its vector values are 
+        # expanded into d_model len vectors repeating the same value (an index)
+        y_i = y_i[:,:,None].expand(-1, -1, x.size(-1))
+        # x_masked: (batch_size, desc_len, d_model)
+        x_masked = torch.gather(x, 1, y_i)
+        # Predict masked tokens
+        x_masked = self.linear(x_masked)
+        x_masked = gelu(x_masked)
+        x_masked = self.norm(x_masked)
+        # y: (batch_size, desc_len, vocab_size)
+        # Logit predictions over description tokens
+        y = self.decoder(x_masked)
+        return y + self.decoder_bias
 
 
 class EmbeddingLayer(nn.Module):
@@ -64,16 +84,18 @@ class EmbeddingLayer(nn.Module):
 class EncoderLayer(nn.Module):
     def __init__(self, c):
         super(EncoderLayer, self).__init__()
-        self.attn_layer = AttentionLayer(c)
-        # self.pos_ffn = PoswiseFeedForwardNet()
+        self.attention_layer = AttentionLayer(c)
+        self.poswise_ffn = PoswiseFeedForwardNet(c)
+        self.c = c
 
     def forward(self, x, attn_pad_mask):
-        x_ctx_embs, attn = self.attn_layer(x, x, x, attn_pad_mask)
-        return -1, -1
+        x_ctx_embs, attn = self.attention_layer(x, x, x, attn_pad_mask)
+        x_ctx_embs = self.poswise_ffn(x_ctx_embs)
+        return x_ctx_embs, attn
 
 
 class AttentionLayer(nn.Module):
-    """Only has one attention head for now"""
+    """Only uses one attention head for now"""
     def __init__(self, c):
         super(AttentionLayer, self).__init__()
         self.W_Q = nn.Linear(c.d_model, c.d_k)
@@ -111,3 +133,26 @@ class AttentionLayer(nn.Module):
         ctx_embs = nn.Linear(d_v, d_model)(ctx_embs)
         ctx_embs = nn.LayerNorm(d_model)(ctx_embs + residual)
         return ctx_embs, attn
+
+
+class PoswiseFeedForwardNet(nn.Module):
+    def __init__(self, c):
+        super(PoswiseFeedForwardNet, self).__init__()
+        self.fc1 = nn.Linear(c.d_model, c.d_ff)
+        self.fc2 = nn.Linear(c.d_ff, c.d_model)
+        self.c = c
+
+    def forward(self, x):
+        # x: (batch_size, seq_len, d_model)
+        x = self.fc1(x)
+        x = gelu(x)
+        # x: (batch_size, seq_len, d_model)
+        x = self.fc2(x)
+        return x
+
+
+################################################################################
+
+
+def gelu(x):
+    return x * 0.5 * (1.0 + torch.erf(x / np.sqrt(2.0)))
