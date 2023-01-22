@@ -29,6 +29,8 @@ VOCAB_JSON_PATH = "./vocabulary.json"
 
 DESC_MAX_LEN = 16
 DESC_MAX_MASKS = 16 # <= DESC_MAX_LEN
+# "[DESC]" and "[IMG]" + description tokens + image tokens
+SEQ_LEN = 2 + DESC_MAX_LEN + (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)
 
 
 ################################################################################
