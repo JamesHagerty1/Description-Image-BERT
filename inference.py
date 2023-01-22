@@ -23,7 +23,9 @@ def inference(model, batch):
 
 
 def main():
-    dataloader = init_dataloader(DATASET_PATH, c.batch_size)
+    dataloader = init_dataloader(DATASET_PATH, 1)
+    for 
+
     model = torch.load(f"{MODELS_DIR}ImgBert")
 
 if __name__ == "__main__":

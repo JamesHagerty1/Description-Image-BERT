@@ -30,15 +30,14 @@ def main():
     dataloader = init_dataloader(DATASET_PATH, c.batch_size)
     epochs = c.epochs
 
-    # for epoch in range(epcohs):
-    for epoch in range(100000000000):
+    for epoch in range(epochs):
         loss_sum, iters = 0, 0
         for i, batch in enumerate(dataloader):
             optimizer.zero_grad()
             # x: (batch_size, seq_len)
             # y_i: (batch_size, desc_max_masks)
             # y: (batch_size, desc_max_masks)
-            x, y_i, y = batch
+            x, y_i, y, _ = batch
             # y_hat: (batch_size, desc_max_masks, vocab_size)
             y_hat, _ = model(x, y_i)
             # y_hat_T: (batch_size, vocab_size, desc_max_masks)
