@@ -46,7 +46,7 @@ class BERT(nn.Module):
         # expanded into d_model len vectors repeating the same value (an index)
         y_i = y_i[:,:,None].expand(-1, -1, x.size(-1))
         # x_masked: (batch_size, desc_max_masks, d_model)
-        # Contextual embeddings for the tokens at masked positions in desc
+        # Gather contextual embeddings for the desc tokens at masked indices
         x_masked = torch.gather(x, 1, y_i)
         # Predict masked tokens
         x_masked = self.linear(x_masked)

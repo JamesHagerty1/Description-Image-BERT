@@ -3,7 +3,7 @@ import torch
 from torch.utils.data import Dataset, DataLoader
 
 
-######## Card images as sentences dataset ###################################### 
+################################################################################
 
 
 class DescriptionImageDataset(Dataset):
@@ -35,7 +35,7 @@ class DescriptionImageDataset(Dataset):
         return len(self.masked_tokens_ids)
 
 
-######## Card images as sentences dataloader ###################################
+################################################################################
 
 
 def init_dataloader(dataset_path, batch_size):
