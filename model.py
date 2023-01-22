@@ -40,21 +40,22 @@ class BERT(nn.Module):
         # used to create its contextual embeddings
         for encoder_layer in self.encoder_layers:
             x, attn = encoder_layer(x, attn_pad_mask) 
-        # y_i: (batch_size, desc_len, d_model)
+        # y_i: (batch_size, desc_max_masks, d_model)
         # Used to gather the embeddings that were masked from the contextual
         # embeddings; y_i vectors are now matrices where its vector values are 
         # expanded into d_model len vectors repeating the same value (an index)
         y_i = y_i[:,:,None].expand(-1, -1, x.size(-1))
-        # x_masked: (batch_size, desc_len, d_model)
+        # x_masked: (batch_size, desc_max_masks, d_model)
+        # Contextual embeddings for the tokens at masked positions in desc
         x_masked = torch.gather(x, 1, y_i)
         # Predict masked tokens
         x_masked = self.linear(x_masked)
         x_masked = gelu(x_masked)
         x_masked = self.norm(x_masked)
-        # y: (batch_size, desc_len, vocab_size)
+        # y_batch: (batch_size, desc_len, vocab_size)
         # Logit predictions over description tokens
-        y = self.decoder(x_masked)
-        return y + self.decoder_bias
+        y_hat = self.decoder(x_masked)
+        return y_hat + self.decoder_bias, attn
 
 
 class EmbeddingLayer(nn.Module):

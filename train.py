@@ -25,7 +25,7 @@ def main():
 
     for i, batch in enumerate(dataloader):
         x, y_i, y = batch
-        y_hat = model(x, y_i)
+        y_hat, _ = model(x, y_i)
         break
         
 
