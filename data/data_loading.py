@@ -6,7 +6,7 @@ from torch.utils.data import Dataset, DataLoader
 ######## Card images as sentences dataset ###################################### 
 
 
-class ImageSentenceDataset(Dataset):
+class DescriptionImageDataset(Dataset):
     def __init__(self, path):
         masked_tokens_ids, masked_indices, masked_ids, descriptions = \
             [], [], [], []
@@ -39,7 +39,7 @@ class ImageSentenceDataset(Dataset):
 
 
 def init_dataloader(dataset_path, batch_size):
-    dataset = ImageSentenceDataset(dataset_path)
+    dataset = DescriptionImageDataset(dataset_path)
     dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
 
@@ -48,7 +48,7 @@ def init_dataloader(dataset_path, batch_size):
 
 
 def main():
-    dataset = ImageSentenceDataset("./cards_dataset.json")
+    dataset = DescriptionImageDataset("./cards_dataset.json")
     x, y, y_i, desc = dataset.__getitem__(0)
     print(x.shape, y.shape, y_i.shape)
     print(x[:20])
