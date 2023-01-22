@@ -31,9 +31,9 @@ class BERT(nn.Module):
         attn_pad_mask = self.attn_pad_mask(x)
         # x: (batch_size, seq_len, d_model)
         # Sequences are now embeddings representing tokens and their positiions
-        x = self.embedding_layer(x)
+        x = self.embedding_layer(x) # x_embs
         for encoder_layer in self.encoder_layers:
-            x, attn = encoder_layer(x, attn_pad_mask)  
+            x, attn = encoder_layer(x, attn_pad_mask) # x_ctx_embs, attn
         return -1
 
 
@@ -68,7 +68,7 @@ class EncoderLayer(nn.Module):
         # self.pos_ffn = PoswiseFeedForwardNet()
 
     def forward(self, x, attn_pad_mask):
-        x, attn = self.attn_layer(x, x, x, attn_pad_mask)
+        x_ctx_embs, attn = self.attn_layer(x, x, x, attn_pad_mask)
         return -1, -1
 
 
@@ -93,16 +93,21 @@ class AttentionLayer(nn.Module):
         # attn: (batch_size, seq_len, seq_len)
         # Attention is just scores softmaxxed
         attn = nn.Softmax(dim=-1)(scores)
-        # context: (batch_size, seq_len, d_v)
+        # ctx_embs: (batch_size, seq_len, d_v)
         # Context embeddings consider how much attention tokens give each other
-        context = torch.matmul(attn, v)
-        return context, attn
+        ctx_embs = torch.matmul(attn, v)
+        return ctx_embs, attn
 
     def forward(self, Q, K, V, attn_pad_mask):
+        # residual: (batch_size, seq_len, d_model)
+        residual = Q
         # q, k, v: (batch_size, seq_len, d_k or d_v)
         # Scale down Q, K, V (which start as the same embeddings sequences)
         q, k, v = self.W_Q(Q), self.W_K(K), self.W_V(V)
-        context, attn = \
+        ctx_embs, attn = \
             self.scaled_dot_product_attention(q, k, v, attn_pad_mask)
-
-        return -1, -1
+        d_v, d_model = self.c.d_v, self.c.d_model
+        # ctx_embs: (batch_size, seq_len, d_model)
+        ctx_embs = nn.Linear(d_v, d_model)(ctx_embs)
+        ctx_embs = nn.LayerNorm(d_model)(ctx_embs + residual)
+        return ctx_embs, attn
