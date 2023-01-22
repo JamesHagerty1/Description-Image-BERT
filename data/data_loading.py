@@ -40,6 +40,11 @@ def init_dataloader(dataset_path, batch_size):
 
 
 def main():
+    with open(CONFIG_PATH) as json_file:
+        json_data = json_file.read()
+    config = json.loads(json_data) 
+    c = AttrDict(config) # config, concise JSON object access syntax
+
     dataset = ImageSentenceDataset("./cards_dataset.json")
     x, y, y_i = dataset.__getitem__(0)
     print(x.shape, y.shape, y_i.shape)

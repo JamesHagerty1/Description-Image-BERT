@@ -1,4 +1,5 @@
 import json
+import torch
 import torch.nn as nn
 import torch.optim as optim
 from data.data_loading import init_dataloader
@@ -11,6 +12,7 @@ from gen_config import AttrDict
 
 CONFIG_PATH = "./config.json"
 DATASET_PATH = "./data/cards_dataset.json"
+MODELS_DIR = "./models/"
 
 
 ################################################################################
@@ -26,9 +28,11 @@ def main():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adagrad(model.parameters())
     dataloader = init_dataloader(DATASET_PATH, c.batch_size)
-
     epochs = c.epochs
-    for epoch in range(epochs):
+
+    # for epoch in range(epcohs):
+    for epoch in range(100000000000):
+        loss_sum, iters = 0, 0
         for i, batch in enumerate(dataloader):
             optimizer.zero_grad()
             # x: (batch_size, seq_len)
@@ -42,6 +46,12 @@ def main():
             loss = criterion(y_hat_T, y).float().mean()
             loss.backward()
             optimizer.step()
-        
+            loss_sum, iters = loss_sum + loss.item(), iters + 1
+        avg_loss = loss_sum / iters
+        print(avg_loss)
+        if avg_loss < 0.02:
+            torch.save(model, f"{MODELS_DIR}ImgBert-loss:{loss:.2}")
+            break
+
 if __name__ == "__main__":
     main()
