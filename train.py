@@ -1,4 +1,6 @@
 import json
+import torch.nn as nn
+import torch.optim as optim
 from data.data_loading import init_dataloader
 from model import BERT
 from gen_config import AttrDict
@@ -21,13 +23,25 @@ def main():
     c = AttrDict(config) # config, concise JSON object access syntax
 
     model = BERT(c)
+    criterion = nn.CrossEntropyLoss()
+    optimizer = optim.Adagrad(model.parameters())
     dataloader = init_dataloader(DATASET_PATH, c.batch_size)
 
-    for i, batch in enumerate(dataloader):
-        x, y_i, y = batch
-        y_hat, _ = model(x, y_i)
-        break
+    epochs = c.epochs
+    for epoch in range(epochs):
+        for i, batch in enumerate(dataloader):
+            optimizer.zero_grad()
+            # x: (batch_size, seq_len)
+            # y_i: (batch_size, desc_max_masks)
+            # y: (batch_size, desc_max_masks)
+            x, y_i, y = batch
+            # y_hat: (batch_size, desc_max_masks, vocab_size)
+            y_hat, _ = model(x, y_i)
+            # y_hat_T: (batch_size, vocab_size, desc_max_masks)
+            y_hat_T = y_hat.transpose(1, 2)
+            loss = criterion(y_hat_T, y).float().mean()
+            loss.backward()
+            optimizer.step()
         
-
 if __name__ == "__main__":
     main()
