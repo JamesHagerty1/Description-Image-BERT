@@ -9,6 +9,8 @@ class BERT(nn.Module):
     def __init__(self, c):
         super(BERT, self).__init__()
         self.embedding_layer = EmbeddingLayer(c)
+        self.encoder_layers = \
+            nn.ModuleList([EncoderLayer(c) for _ in range(c.n_layers)])
         self.c = c # config
 
     def attn_pad_mask(self, x):
@@ -26,10 +28,11 @@ class BERT(nn.Module):
     def forward(self, x, y_i):
         # attn_pad_mask: (batch_size, seq_len, seq_len)
         attn_pad_mask = self.attn_pad_mask(x)
-        # x: (batch_size, )
-        # x 
+        # x: (batch_size, seq_len, d_model)
+        # Sequences are now embeddings representing tokens and their positiions
         x = self.embedding_layer(x)
-
+        # for layer in self.layers:
+        #     x, attn = layer(x, attn_pad_mask)  
         return -1
 
 
@@ -57,3 +60,24 @@ class EmbeddingLayer(nn.Module):
         return self.norm(x)
 
 
+class EncoderLayer(nn.Module):
+    def __init__(self, c):
+        super(EncoderLayer, self).__init__()
+        self.attn_layer = AttentionLayer(c)
+        # self.pos_ffn = PoswiseFeedForwardNet()
+
+    def forward(self, x, attn_pad_mask):
+        x, attn = self.attn_layer(x, x, x, attn_pad_mask)
+        return -1
+
+
+class AttentionLayer():
+    """Only has one attention head for now"""
+    def __init__(self, c):
+        super(AttentionLayer, self).__init__()
+        self.W_Q = nn.Linear(c.d_model, c.d_k)
+        self.W_K = nn.Linear(c.d_model, c.d_k)
+        self.W_V = nn.Linear(c.d_model, c.d_v)
+
+    def forward(self):
+        return -1
