@@ -7,6 +7,7 @@ import torch.nn as nn
 
 
 class BERT(nn.Module):
+    """Without next sentence prediction"""
     def __init__(self, c):
         super(BERT, self).__init__()
         self.embedding_layer = EmbeddingLayer(c)
