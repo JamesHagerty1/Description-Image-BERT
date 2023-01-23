@@ -22,7 +22,7 @@ class BERT(nn.Module):
     def attn_pad_mask(self, x):
         """Reference to make "[PAD]" token embeddings negligible in context"""
         pad_token_id = self.c.pad_token_id
-        batch_size = self.c.batch_size
+        batch_size = x.size(0)
         seq_len = self.c.seq_len
         # pad_mask: (batch_size, seq_len, seq_len)
         # Each sequence's mask is a matrix repeating the "[PAD]" mask for that

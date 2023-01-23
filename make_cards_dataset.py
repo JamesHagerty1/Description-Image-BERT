@@ -34,7 +34,8 @@ def main():
         tokens |= set(image_tokens)
     vocabulary_json(tokens)
     # Data for model
-    for filename in os.listdir(DATASET_DIR):
+    for filename in sorted(os.listdir(DATASET_DIR), \
+        key=lambda x:(int(x.split("_")[0]), x.split("_")[-1])):
         description_tokens = filename.replace(".png", "").split("_")
         image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
         # "8 of hearts" -> "[MASK] of hearts", "8 of [MASK]"

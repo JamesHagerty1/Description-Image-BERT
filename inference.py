@@ -27,7 +27,11 @@ def main():
 
     for i, batch in enumerate(dataloader):
         x, y_i, y, desc = batch
-        print(desc)
+        y_hat, attn = model(x, y_i)
+        print(desc[0])
+        print(y_i[0])
+        print(y_hat.shape)
+        break
 
 if __name__ == "__main__":
     main()
