@@ -25,6 +25,7 @@ def main():
         input_path = f"{IMAGES_DIR}{filename}"
         output_path = f"{DATASET_DIR}{filename}"
         standardize_image(input_path, output_path)
+
     # Vocabulary (currently limited to token-words of cards dataset)
     tokens = set()
     for filename in os.listdir(DATASET_DIR):
@@ -33,6 +34,7 @@ def main():
         image_tokens = trinary_image_tokens(f"{DATASET_DIR}/{filename}")
         tokens |= set(image_tokens)
     vocabulary_json(tokens)
+    
     # Data for model
     for filename in sorted(os.listdir(DATASET_DIR), \
         key=lambda x:(int(x.split("_")[0]), x.split("_")[-1])):

@@ -9,8 +9,10 @@
 import numpy as np
 import os
 import json
+import torch
 from matplotlib import pyplot as plt
 from PIL import Image as im
+from data_loading import init_dataloader
 
 
 ################################################################################
@@ -82,6 +84,7 @@ def trinary_image_tokens(input_path):
 
 def vocabulary_json(add_tokens):
     """TBD -- revise for vocabulary appending, like json_dataset_append()"""
+    global SPECIAL_TOKEN_TO_ID, VOCAB_JSON_PATH
     token_to_id = SPECIAL_TOKEN_TO_ID
     for token in add_tokens:
         if token not in token_to_id:
@@ -96,6 +99,7 @@ def vocabulary_json(add_tokens):
 
 
 def valid_masked_indices(masked_indices, description_tokens):
+    global DESC_MAX_LEN
     assert (len(masked_indices) <= len(description_tokens)), "Too many masks"
     assert (len(set(masked_indices)) == len(masked_indices)), "Repeating masks"
     s = set(range(DESC_MAX_LEN)).union(masked_indices)
@@ -104,6 +108,7 @@ def valid_masked_indices(masked_indices, description_tokens):
 
 
 def valid_image_tokens(image_tokens):
+    global IMG_DIM, IMG_WORD_DIM
     assert (len(image_tokens) == (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)), \
         "Too few image tokens"
     for token in image_tokens:
@@ -114,6 +119,7 @@ def valid_image_tokens(image_tokens):
 
 
 def input_tokens(description_tokens, image_tokens):
+    global DESC_MAX_LEN
     assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
     assert (valid_image_tokens(image_tokens)), "Invalid image tokens"
     tokens = ["[DESC]"]
@@ -129,6 +135,7 @@ def input_tokens(description_tokens, image_tokens):
 def json_dataset_append(dataset_path, description_tokens, image_tokens, 
     masked_indices):
     """Used to iteratively create datasets tailored to this model"""
+    global DESC_MAX_LEN, DESC_MAX_MASKS, VOCAB_JSON_PATH
     assert (dataset_path.endswith(".json")), "Non-json dataset file"
     assert (len(description_tokens) <= DESC_MAX_LEN), "Description too long"
     assert (valid_image_tokens(image_tokens)), "Invalid image tokens"
@@ -170,6 +177,7 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
 ######## Token sequence sanity checks ##########################################
 
 def tokens_matrix(image_tokens):
+    global IMG_DIM
     matrix = np.zeros((IMG_DIM, IMG_DIM))
     for i, token in enumerate(image_tokens):
         token_matrix = np.array(list(token)).astype(int).reshape((3, 3))
@@ -222,7 +230,16 @@ def main():
     # tokens = eval(json_data[0]["tokens"])[2+DESC_MAX_LEN:]
     # tokens_image(tokens, "./data/images/test.png")
 
-    vis()
+    model = torch.load("./models/ImgBert-loss:0.021")
+    dataloader = init_dataloader("./data/cards_dataset.json", 1)
+    for i, batch in enumerate(dataloader):
+        x, y_i, y, desc = batch
+        print(desc[0])
+        with torch.no_grad():
+            y_hat, attn = model(x, y_i)
+        print(y_hat.shape)
+        break
+
 
 if __name__ == "__main__":
     main()

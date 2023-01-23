@@ -39,7 +39,9 @@ class DescriptionImageDataset(Dataset):
 
 
 def init_dataloader(dataset_path, batch_size):
+    assert (dataset_path.endswith(".json")), "Non-json dataset file"
     dataset = DescriptionImageDataset(dataset_path)
+    assert(batch_size <= dataset.__len__()), "batch_size too large"
     dataloader = DataLoader(dataset, batch_size=batch_size)
     return dataloader
 
