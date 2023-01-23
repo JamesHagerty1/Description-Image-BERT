@@ -1,37 +1,27 @@
 import torch
-from data_loading import init_dataloader
 
 
 ################################################################################
 
 
-DATASET_PATH = "./data/cards_dataset.json"
-MODELS_DIR = "./models/"
+MODEL_PATH = "./models/ImgBert-loss:0.021"
 
 
 ################################################################################
 
 
-def inference(model, batch):
+def inference(x, y_i, model_path=MODEL_PATH):
+    model = torch.load(model_path)
     with torch.no_grad():
-        pass
-    pass
+        y_hat, attn = model(x, y_i)
+    return y_hat, attn
 
 
 ################################################################################
 
 
 def main():
-    model = torch.load(f"{MODELS_DIR}ImgBert-loss:0.021")
-    dataloader = init_dataloader(DATASET_PATH, 1)
-
-    for i, batch in enumerate(dataloader):
-        x, y_i, y, desc = batch
-        y_hat, attn = model(x, y_i)
-        print(desc[0])
-        print(y_i[0])
-        print(y_hat.shape)
-        break
+    pass
 
 if __name__ == "__main__":
     main()
