@@ -230,16 +230,25 @@ def main():
     # tokens = eval(json_data[0]["tokens"])[2+DESC_MAX_LEN:]
     # tokens_image(tokens, "./data/images/test.png")
 
+    # logic specific to single masks per cards dataset entry
     model = torch.load("./models/ImgBert-loss:0.021")
     dataloader = init_dataloader("./data/cards_dataset.json", 1)
+    with open("./data/vocabulary.json") as json_file:
+        json_data = json.load(json_file)
+    id_to_token = json_data["id_to_token"]
     for i, batch in enumerate(dataloader):
         x, y_i, y, desc = batch
         print(desc[0])
         with torch.no_grad():
             y_hat, attn = model(x, y_i)
-        print(y_hat.shape)
-        break
-
+        token_i = 1 if y_i[0][0].item() == 1 else 3 # i in total sequence
+        logits = y_hat[0][token_i-1]
+        inf_token_id = torch.argmax(logits).item()
+        inf_token = id_to_token[str(inf_token_id)]
+        print(inf_token)
+        # Retrain!
+        
+        
 
 if __name__ == "__main__":
     main()
