@@ -1,5 +1,5 @@
 import json
-from data.processing import SEQ_LEN, SPECIAL_TOKEN_TO_ID
+from processing import SEQ_LEN, SPECIAL_TOKEN_TO_ID
 
 
 ################################################################################

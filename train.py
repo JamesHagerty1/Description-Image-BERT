@@ -2,7 +2,7 @@ import json
 import torch
 import torch.nn as nn
 import torch.optim as optim
-from data.data_loading import init_dataloader
+from data_loading import init_dataloader
 from model import BERT
 from gen_config import AttrDict
 
