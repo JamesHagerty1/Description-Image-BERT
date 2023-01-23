@@ -167,8 +167,7 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
         json.dump(json_data, json_file, indent=2)
 
 
-################################################################################
-
+######## Token sequence sanity checks ##########################################
 
 def tokens_matrix(image_tokens):
     matrix = np.zeros((IMG_DIM, IMG_DIM))
@@ -189,11 +188,26 @@ def tokens_image(image_tokens, output_path):
 ################################################################################
 
 
+# TEMP ref
 def vis():
-    matrix = np.random.rand(60, 60)
-    print(matrix)
-    plt.figure(figsize=(5,5))
-    plt.imsave(f"{VISUALS_DIR}test.png", matrix)
+    m = np.empty([60, 60, 3], dtype=np.uint8)
+    m[0][0] = np.array([128, 128, 128])
+    m[0][1] = np.array([255, 0, 0])
+    m[0][2] = np.array([0, 255, 0])
+    m[0][3] = np.array([0, 0, 255])
+    m[0][4] = np.array([255, 255, 255])
+
+    fig, axs = plt.subplots(2, 2)
+    plt.setp(axs, xticks=[], yticks=[])
+
+    axs[0][0].set_title("<title>")
+    axs[0][0].imshow(m)
+    axs[0][1].imshow(m)
+    axs[1][0].imshow(m)
+    axs[1][1].imshow(m)
+
+    plt.savefig("visuals/test.png")
+
 
 
 ################################################################################
