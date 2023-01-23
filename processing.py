@@ -1,6 +1,8 @@
 """
 -Helpers to create any image dataset for this model
+-Helpers to tokenize data
 -60x60 images where the only pixel colors are white, mid-gray, black
+-Helpers to visualize how attention is applied
 """
 
 
@@ -25,12 +27,14 @@ GRAY = 128
 WHITE = 255
 
 SPECIAL_TOKEN_TO_ID = {"[DESC]" : 0, "[MASK]" : 1, "[PAD]" : 2, "[IMG]" : 3}
-VOCAB_JSON_PATH = ".data/vocabulary.json"
+VOCAB_JSON_PATH = "./data/vocabulary.json"
 
 DESC_MAX_LEN = 16
 DESC_MAX_MASKS = 16 # <= DESC_MAX_LEN
 # "[DESC]" and "[IMG]" + description tokens + image tokens
 SEQ_LEN = 2 + DESC_MAX_LEN + (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)
+
+VISUALS_DIR = "./visuals/"
 
 
 ################################################################################
@@ -185,15 +189,27 @@ def tokens_image(image_tokens, output_path):
 ################################################################################
 
 
+def vis():
+    matrix = np.random.rand(60, 60)
+    print(matrix)
+    plt.figure(figsize=(5,5))
+    plt.imsave(f"{VISUALS_DIR}test.png", matrix)
+
+
+################################################################################
+
+
 def main():
     # standardize_image("./data/images/dog.png", "./data/images/trinary_dog.png")
     # tokens = trinary_image_tokens("./data/images/trinary_dog.png")
     # tokens_image(tokens, "./data/images/re_trinary_dog.png")
 
-    with open("./data/cards_dataset.json") as json_file:
-        json_data = json.load(json_file)
-    tokens = eval(json_data[0]["tokens"])[2+DESC_MAX_LEN:]
-    tokens_image(tokens, "./data/images/test.png")
+    # with open("./data/cards_dataset.json") as json_file:
+    #     json_data = json.load(json_file)
+    # tokens = eval(json_data[0]["tokens"])[2+DESC_MAX_LEN:]
+    # tokens_image(tokens, "./data/images/test.png")
+
+    vis()
 
 if __name__ == "__main__":
     main()

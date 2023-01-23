@@ -11,9 +11,9 @@ from processing import standardize_image, trinary_image_tokens, \
 ################################################################################
 
 
-IMAGES_DIR = "./cards/"
-DATASET_DIR = "./cards_dataset/"
-JSON_PATH = "./cards_dataset.json"
+IMAGES_DIR = "./data/cards/"
+DATASET_DIR = "./data/cards_dataset/"
+JSON_PATH = "./data/cards_dataset.json"
 
 
 ################################################################################

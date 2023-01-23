@@ -27,6 +27,7 @@ def main():
 
     for i, batch in enumerate(dataloader):
         x, y_i, y, desc = batch
+        print(desc)
 
 if __name__ == "__main__":
     main()
