@@ -1,5 +1,5 @@
 import torch
-from data.data_loading import init_dataloader
+from data_loading import init_dataloader
 
 
 ################################################################################
