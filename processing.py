@@ -180,6 +180,18 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
 ################################################################################
 
 
+# def tokens_image(image_tokens, output_path):
+#     image = im.fromarray(matrix)
+#     overlay = im.fromarray(overlay)
+#     image.paste(overlay, mask=overlay)
+#     plt.imsave(output_path, np.array(image))
+def attention_image(image_tokens, attn, token_i, output_path):
+    m1, m2 = tokens_matrix(image_tokens), attention_matrix(attn, token_i)
+    image, overlay = im.fromarray(m1), im.fromarray(m2)
+    image.paste(overlay, mask=overlay)
+    plt.imsave(output_path, np.array(image))
+
+
 def tokens_matrix(image_tokens):
     global BLACK_MAX, WHITE_MIN, BLACK, GRAY, WHITE, IMG_DIM
     def brightness_bucket(en):
@@ -197,20 +209,6 @@ def tokens_matrix(image_tokens):
     return matrix
 
 
-def tokens_image(image_tokens, output_path):
-    matrix = tokens_matrix(image_tokens)
-    image = im.fromarray(matrix)#.convert("RGBA")
-    o = np.ones((60, 60, 4), dtype=np.uint8)
-    o *= 100
-    for r in range(o.shape[0]):
-        for c in range(o.shape[1]):
-            o[r][c][0] += 100
-    overlay = im.fromarray(o)#.convert("RGBA")
-    image.paste(overlay, mask=overlay)
-    plt.figure(figsize=(5,5))
-    plt.imsave(output_path, np.array(image))
-
-
 def attention_matrix(attn, token_i):
     """Transform model's attn matrix into an overlay for image / token attn"""
     # Attention vals between 0-255
@@ -225,16 +223,17 @@ def attention_matrix(attn, token_i):
     # RGBA overlay for source image
     R, G, B = 255, 255, 255
     overlay = np.zeros((IMG_DIM, IMG_DIM, 4), dtype=np.uint8)
+    w = 10 # larger w makes attention more visible
     for r in range(IMG_ATTN_DIM):
         for c in range(IMG_ATTN_DIM):
             s = attn[r][c]
             if s > 0:
-                m = np.array([[R-s, G, B, 255]])
+                m = np.array([[min(0, R - s - w), G, B, 100]])
                 m = np.repeat(m, IMG_WORD_DIM ** 2, axis=0). \
                     reshape(IMG_WORD_DIM, IMG_WORD_DIM, 4)
                 overlay[r*IMG_WORD_DIM:r*IMG_WORD_DIM+IMG_WORD_DIM, \
                     c*IMG_WORD_DIM:c*IMG_WORD_DIM+IMG_WORD_DIM] = m
-    plt.imsave("visuals/test.png", overlay)
+    return overlay
 
 
 # TEMP ref
@@ -281,12 +280,11 @@ def main():
         inf_i = y_i[0][0].item()
         inf_token_id = torch.argmax(y_hat[0][0]).item()
         inf_token = id_to_token[str(inf_token_id)]
-        print(f"{inf_token} at i={inf_i} of {desc[0]}")
+        # print(f"{inf_token} at i={inf_i} of {desc[0]}")
         image_tokens = \
             [id_to_token[str(id.item())] for id in x[0]][2+DESC_MAX_LEN:]
-        attention_matrix(attn, inf_i)
-
-        break
+        attention_image(image_tokens, attn, inf_i, f"./visuals/{desc[0]}.png")
+        if i == 10: break
         
 if __name__ == "__main__":
     main()
