@@ -199,16 +199,42 @@ def tokens_matrix(image_tokens):
 
 def tokens_image(image_tokens, output_path):
     matrix = tokens_matrix(image_tokens)
-    image = im.fromarray(matrix).convert("RGBA")
+    image = im.fromarray(matrix)#.convert("RGBA")
     o = np.ones((60, 60, 4), dtype=np.uint8)
     o *= 100
     for r in range(o.shape[0]):
         for c in range(o.shape[1]):
-            o[r][c][1] += 100
-    overlay = im.fromarray(o) #.convert("RGBA")
+            o[r][c][0] += 100
+    overlay = im.fromarray(o)#.convert("RGBA")
     image.paste(overlay, mask=overlay)
     plt.figure(figsize=(5,5))
     plt.imsave(output_path, np.array(image))
+
+
+def attention_matrix(attn, token_i):
+    """Transform model's attn matrix into an overlay for image / token attn"""
+    # Attention vals between 0-255
+    attn = softmax(attn[0,token_i,2+DESC_MAX_LEN:], 0).numpy(). \
+        reshape(IMG_ATTN_DIM, IMG_ATTN_DIM)
+    attn_min = np.amin(attn)
+    attn -= attn_min
+    attn_max = np.amax(attn)
+    attn /= attn_max
+    attn *= 255 
+    attn = attn.astype(np.uint8)
+    # RGBA overlay for source image
+    R, G, B = 255, 255, 255
+    overlay = np.zeros((IMG_DIM, IMG_DIM, 4), dtype=np.uint8)
+    for r in range(IMG_ATTN_DIM):
+        for c in range(IMG_ATTN_DIM):
+            s = attn[r][c]
+            if s > 0:
+                m = np.array([[R-s, G, B, 255]])
+                m = np.repeat(m, IMG_WORD_DIM ** 2, axis=0). \
+                    reshape(IMG_WORD_DIM, IMG_WORD_DIM, 4)
+                overlay[r*IMG_WORD_DIM:r*IMG_WORD_DIM+IMG_WORD_DIM, \
+                    c*IMG_WORD_DIM:c*IMG_WORD_DIM+IMG_WORD_DIM] = m
+    plt.imsave("visuals/test.png", overlay)
 
 
 # TEMP ref
@@ -258,15 +284,9 @@ def main():
         print(f"{inf_token} at i={inf_i} of {desc[0]}")
         image_tokens = \
             [id_to_token[str(id.item())] for id in x[0]][2+DESC_MAX_LEN:]
-        tokens_image(image_tokens, "./visuals/test.png")
+        attention_matrix(attn, inf_i)
 
         break
-
-        # attention of masked token to image tokens
-        img_attn = softmax(attn[0,inf_i,2+DESC_MAX_LEN:], 0). \
-            reshape(IMG_ATTN_DIM, IMG_ATTN_DIM).numpy()
-        # plt.figure(figsize=(5,5))
-        # plt.imsave(f"./visuals/attn{i}.png", img_attn, cmap="gist_gray")
         
 if __name__ == "__main__":
     main()
