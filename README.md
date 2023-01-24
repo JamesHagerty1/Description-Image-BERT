@@ -10,4 +10,5 @@ BERT trained on a vocabulary and sequence format concatenating verbal descriptio
 60x60 grayscale images are unrolled into sequences of 3x3 sub-matrices of pixels where brightness values are rounded to trinary enumerations (0, 1, or 2); then they are further unrolled into a sequence 9-length trinary sequences.
 #### Trinary token from a trinary image
 ![Trinary token from a trinary image](/static/trinary_demo.png)
+<img src="/static/trinary_demo.png" width="100" height="100">
 
