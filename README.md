@@ -11,6 +11,6 @@ BERT trained on a vocabulary and sequence format concatenating verbal descriptio
 <img src="/static/trinary_demo.png" height="300">
 
 ### Attention Visuals
-The point of this BERT is to see the relationships between description tokens and image tokens. Here are visuals showing how much attention select [DESC] tokens gave the [IMG] tokens comprising an entire images (dataset limited to images of cards and their token vocabulary).
+The point of this BERT is to see the contextual-embedding / attention relationships between description tokens and image tokens. Here are visuals showing how much attention select [DESC] tokens gave the [IMG] tokens comprising entire images (dataset limited to images of cards and their token vocabulary).
 
-<img src="/attention_plots/attn_plot.png" width="600">
+<img src="/attention_plots/attn_plot.png" width="1000">
