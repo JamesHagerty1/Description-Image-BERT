@@ -34,8 +34,7 @@ def main():
     dataloader = init_dataloader(DATASET_PATH, c.batch_size)
     epochs = c.epochs
 
-    #for epoch in range(epochs):
-    for epoch in range(100000000000000):
+    for epoch in range(epochs):
         loss_sum, iters = 0, 0
         for i, batch in enumerate(dataloader):
             optimizer.zero_grad()
@@ -58,7 +57,7 @@ def main():
             loss_sum, iters = loss_sum + loss.item(), iters + 1
         avg_loss = loss_sum / iters
         print(avg_loss)
-        if avg_loss < 0.005:
+        if avg_loss < 0.01:
             torch.save(model, f"{MODELS_DIR}BERT-loss:{avg_loss:.3}")
             break
 
