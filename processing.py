@@ -1,8 +1,7 @@
 """
 -Helpers to create any image dataset for this model
 -Helpers to tokenize data
--60x60 images where the only pixel colors are white, mid-gray, black
--Helpers to visualize how attention is applied
+-Helpers to visualize attention
 """
 
 
