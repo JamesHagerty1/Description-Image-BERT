@@ -181,18 +181,18 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
 ################################################################################
 
 
-# TBD
-def vis(rows, cols, plot_matrices, plot_titles):
+def attention_plot(rows, cols, plot_matrices, plot_titles, title_size):
     assert(len(plot_matrices) == len(plot_titles)), \
         "Plot matrices / titles mismatch"
     assert (len(plot_matrices) == rows * cols), "Invalid plot grid dimensions"
     mpl.rcParams["figure.dpi"] = 1024
-    mpl.rcParams["axes.titlesize"] = 5
+    mpl.rcParams["axes.titlesize"] = title_size
     fig, axs = plt.subplots(nrows=rows, ncols=cols)
     plt.setp(axs, xticks=[], yticks=[])
+    fig.suptitle("[DESC] token attention to [IMG] tokens")
     for r in range(rows):
         for c in range(cols):
-            #axs[r][c].set_title(plot_titles[r*cols+c])
+            axs[r][c].set_title(plot_titles[r*cols+c], pad=1, loc="left")
             axs[r][c].imshow(plot_matrices[r*cols+c])
     plt.savefig("attention_plots/attn_plot.png")
 
@@ -268,12 +268,13 @@ def main():
         inf_i = y_i[0][0].item()
         inf_token_id = torch.argmax(y_hat[0][0]).item()
         inf_token = id_to_token[str(inf_token_id)]
+        src_token = desc[0].split(" ")[inf_i-1]
         image_tokens = \
             [id_to_token[str(id.item())] for id in x[0]][2+DESC_MAX_LEN:]
         m = token_image_attention_matrix(image_tokens, attn, inf_i)
         plot_matrices.append(m)
-        plot_titles.append(desc[0])
-    vis(9, 8, plot_matrices, plot_titles)
+        plot_titles.append(src_token)
+    attention_plot(9, 8, plot_matrices, plot_titles, 3)
         
 if __name__ == "__main__":
     main()
