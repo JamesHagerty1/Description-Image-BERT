@@ -12,6 +12,7 @@ import json
 import torch
 from matplotlib import pyplot as plt
 from PIL import Image as im
+from torch.nn.functional import softmax
 from data_loading import init_dataloader
 
 
@@ -34,7 +35,9 @@ VOCAB_JSON_PATH = "./data/vocabulary.json"
 DESC_MAX_LEN = 16
 DESC_MAX_MASKS = 16 # <= DESC_MAX_LEN
 # "[DESC]" and "[IMG]" + description tokens + image tokens
-SEQ_LEN = 2 + DESC_MAX_LEN + (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)
+IMG_TOKENS = (IMG_DIM ** 2 // IMG_WORD_DIM ** 2)
+SEQ_LEN = 2 + DESC_MAX_LEN + IMG_TOKENS
+IMG_ATTN_DIM = int(np.sqrt(IMG_TOKENS))
 
 VISUALS_DIR = "./visuals/"
 
@@ -227,8 +230,8 @@ def main():
     # tokens = eval(json_data[0]["tokens"])[2+DESC_MAX_LEN:]
     # tokens_image(tokens, "./data/images/test.png")
 
-    # logic specific to single masks per cards dataset entry
-    model = torch.load("./models/BERT-loss:0.021")
+    # Logic specific to single masks per cards dataset entry
+    model = torch.load("./models/BERT-loss:0.0149")
     dataloader = init_dataloader("./data/cards_dataset.json", 1)
     with open("./data/vocabulary.json") as json_file:
         json_data = json.load(json_file)
@@ -241,13 +244,16 @@ def main():
         inf_token_id = torch.argmax(y_hat[0][0]).item()
         inf_token = id_to_token[str(inf_token_id)]
         print(f"{inf_token} at i={inf_i} of {desc[0]}")
-        print(attn.shape)
-
         image_tokens = \
             [id_to_token[str(id.item())] for id in x[0]][2+DESC_MAX_LEN:]
         tokens_image(image_tokens, "./visuals/test.png")
+        # attention of masked token to image tokens
+        img_attn = softmax(attn[0,inf_i,2+DESC_MAX_LEN:]). \
+            reshape(IMG_ATTN_DIM, IMG_ATTN_DIM).numpy()
+        plt.figure(figsize=(5,5))
+        plt.imsave("./visuals/attn.png", img_attn, cmap="gist_gray")
+        print(img_attn)
         break
-        
         
 if __name__ == "__main__":
     main()
