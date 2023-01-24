@@ -11,7 +11,7 @@ BERT trained on a vocabulary and sequence format concatenating verbal descriptio
 <img src="/static/trinary_demo.png" height="300">
 
 ### Attention Visuals
-One reason for this BERT is to see the contextual-embedding / attention relationships between [DESC] tokens and [IMG] tokens. Here are visuals showing how much attention select [DESC] tokens gave the [IMG] tokens comprising entire images (dataset limited to images of cards and their token vocabulary). **Zoom in to the plotted images** to see the attention more clearly; brighter red highlights represent greater attention values.
+One reason for this BERT is to see the contextual-embedding / attention relationships between [DESC] tokens and [IMG] tokens. Here are visuals showing how much attention select [DESC] tokens gave the [IMG] tokens comprising entire images (dataset limited to images of playing cards and their token vocabulary). **Zoom in to the plotted images** to see the attention more clearly; brighter red highlights represent greater attention values.
 
 <img src="/attention_plots/attn_plot.png" width="1500">
 
