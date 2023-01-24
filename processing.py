@@ -177,13 +177,20 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
         json.dump(json_data, json_file, indent=2)
 
 
-######## Token sequences / visuals #############################################
+################################################################################
+
 
 def tokens_matrix(image_tokens):
-    global IMG_DIM
-    matrix = np.zeros((IMG_DIM, IMG_DIM))
+    global BLACK_MAX, WHITE_MIN, BLACK, GRAY, WHITE, IMG_DIM
+    def brightness_bucket(en):
+        if (en == 0): return BLACK
+        elif (en == 1): return GRAY
+        else: return WHITE
+    matrix = np.empty([60, 60, 3], dtype=np.uint8)
     for i, token in enumerate(image_tokens):
-        token_matrix = np.array(list(token)).astype(int).reshape((3, 3))
+        brightness = [brightness_bucket(int(e)) for e in list(token)]
+        token_matrix = np.array(brightness).astype(int).repeat(3). \
+            reshape(IMG_WORD_DIM, IMG_WORD_DIM, 3)
         r = IMG_WORD_DIM * (i // (IMG_DIM // IMG_WORD_DIM)) # top
         c = (i * IMG_WORD_DIM) % IMG_DIM # left
         matrix[r:r+IMG_WORD_DIM,c:c+IMG_WORD_DIM] = token_matrix
@@ -192,6 +199,7 @@ def tokens_matrix(image_tokens):
 
 def tokens_image(image_tokens, output_path):
     matrix = tokens_matrix(image_tokens)
+    print(matrix)
     plt.figure(figsize=(5,5))
     plt.imsave(output_path, matrix)
 
@@ -204,16 +212,13 @@ def vis():
     m[0][2] = np.array([0, 255, 0])
     m[0][3] = np.array([0, 0, 255])
     m[0][4] = np.array([255, 255, 255])
-
     fig, axs = plt.subplots(2, 2)
     plt.setp(axs, xticks=[], yticks=[])
-
     axs[0][0].set_title("<title>")
     axs[0][0].imshow(m)
     axs[0][1].imshow(m)
     axs[1][0].imshow(m)
     axs[1][1].imshow(m)
-
     plt.savefig("visuals/test.png")
 
 
@@ -247,13 +252,14 @@ def main():
         image_tokens = \
             [id_to_token[str(id.item())] for id in x[0]][2+DESC_MAX_LEN:]
         tokens_image(image_tokens, "./visuals/test.png")
-        # attention of masked token to image tokens
-        img_attn = softmax(attn[0,inf_i,2+DESC_MAX_LEN:]). \
-            reshape(IMG_ATTN_DIM, IMG_ATTN_DIM).numpy()
-        plt.figure(figsize=(5,5))
-        plt.imsave("./visuals/attn.png", img_attn, cmap="gist_gray")
-        print(img_attn)
+
         break
+
+        # attention of masked token to image tokens
+        img_attn = softmax(attn[0,inf_i,2+DESC_MAX_LEN:], 0). \
+            reshape(IMG_ATTN_DIM, IMG_ATTN_DIM).numpy()
+        # plt.figure(figsize=(5,5))
+        # plt.imsave(f"./visuals/attn{i}.png", img_attn, cmap="gist_gray")
         
 if __name__ == "__main__":
     main()
