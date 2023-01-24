@@ -189,11 +189,11 @@ def attention_plot(rows, cols, plot_matrices, plot_titles, title_size):
     mpl.rcParams["axes.titlesize"] = title_size
     fig, axs = plt.subplots(nrows=rows, ncols=cols)
     plt.setp(axs, xticks=[], yticks=[])
-    fig.suptitle("[DESC] token attention to [IMG] tokens")
     for r in range(rows):
         for c in range(cols):
             axs[r][c].set_title(plot_titles[r*cols+c], pad=1, loc="left")
             axs[r][c].imshow(plot_matrices[r*cols+c])
+    fig.suptitle("[DESC] token attention to [IMG] tokens")
     plt.savefig("attention_plots/attn_plot.png")
 
 
@@ -240,7 +240,7 @@ def attention_matrix(attn, token_i):
         for c in range(IMG_ATTN_DIM):
             s = attn[r][c]
             if s > 0:
-                m = np.array([[min(0, R - s - w), G, B, 100]])
+                m = np.array([[R, min(0, G - s - w), B, 100]])
                 m = np.repeat(m, IMG_WORD_DIM ** 2, axis=0). \
                     reshape(IMG_WORD_DIM, IMG_WORD_DIM, 4)
                 overlay[r*IMG_WORD_DIM:r*IMG_WORD_DIM+IMG_WORD_DIM, \
