@@ -231,7 +231,7 @@ def attention_matrix(attn, token_i):
     # RGBA overlay for source image
     R, G, B = 0, 0, 0
     overlay = np.zeros((IMG_DIM, IMG_DIM, 4), dtype=np.uint8)
-    w = 64 # larger w makes attention more visible
+    w = 128 # larger w makes attention more visible
     for r in range(IMG_ATTN_DIM):
         for c in range(IMG_ATTN_DIM):
             s = attn[r][c]
