@@ -46,10 +46,6 @@ VISUALS_DIR = "./visuals/"
 ################################################################################
 
 
-def crop(input_path, output_path):
-    pass
-
-
 def standardize_image(input_path, output_path):
     global BLACK_MAX, WHITE_MIN, BLACK, GRAY, WHITE
     def brightness_bucket(brightness):
@@ -233,14 +229,14 @@ def attention_matrix(attn, token_i):
     attn *= 255 
     attn = attn.astype(np.uint8)
     # RGBA overlay for source image
-    R, G, B = 255, 255, 255
+    R, G, B = 0, 0, 0
     overlay = np.zeros((IMG_DIM, IMG_DIM, 4), dtype=np.uint8)
-    w = 32 # larger w makes attention more visible
+    w = 64 # larger w makes attention more visible
     for r in range(IMG_ATTN_DIM):
         for c in range(IMG_ATTN_DIM):
             s = attn[r][c]
             if s > 0:
-                m = np.array([[R, min(0, G - s - w), B, 100]])
+                m = np.array([[max(255, R + w + s), G, B, 100]])
                 m = np.repeat(m, IMG_WORD_DIM ** 2, axis=0). \
                     reshape(IMG_WORD_DIM, IMG_WORD_DIM, 4)
                 overlay[r*IMG_WORD_DIM:r*IMG_WORD_DIM+IMG_WORD_DIM, \
