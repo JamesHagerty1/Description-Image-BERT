@@ -34,7 +34,8 @@ def main():
     dataloader = init_dataloader(DATASET_PATH, c.batch_size)
     epochs = c.epochs
 
-    for epoch in range(epochs):
+    #for epoch in range(epochs):
+    for epoch in range(100000000000):
         loss_sum, iters = 0, 0
         for i, batch in enumerate(dataloader):
             optimizer.zero_grad()
@@ -51,20 +52,15 @@ def main():
             # their effect on Cross-Entropy loss
             loss_pad_mask = x[:,1:1+DESC_MAX_LEN].data.eq(pad_token_id)
             loss.masked_fill_(loss_pad_mask, 0)
-            print(loss)
-            return
             loss = loss.float().mean()
             loss.backward()
             optimizer.step()
             loss_sum, iters = loss_sum + loss.item(), iters + 1
         avg_loss = loss_sum / iters
-        if avg_loss < 0.02:
-            torch.save(model, f"{MODELS_DIR}ImgBert-loss:{loss:.2}")
-            break
-
         print(avg_loss)
-        if epoch == 20:
-            return
+        if avg_loss < 0.02:
+            torch.save(model, f"{MODELS_DIR}BERT-loss:{loss:.2}")
+            break
 
 if __name__ == "__main__":
     main()
