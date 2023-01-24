@@ -20,7 +20,7 @@ MODELS_DIR = "./models/"
 
 
 def main():
-    global DESX_MAX_LEN
+    global DESC_MAX_LEN
     with open(CONFIG_PATH) as json_file:
         json_data = json_file.read()
     config = json.loads(json_data) 
@@ -35,7 +35,7 @@ def main():
     epochs = c.epochs
 
     #for epoch in range(epochs):
-    for epoch in range(100000000000):
+    for epoch in range(100000000000000):
         loss_sum, iters = 0, 0
         for i, batch in enumerate(dataloader):
             optimizer.zero_grad()
@@ -58,8 +58,8 @@ def main():
             loss_sum, iters = loss_sum + loss.item(), iters + 1
         avg_loss = loss_sum / iters
         print(avg_loss)
-        if avg_loss < 0.02:
-            torch.save(model, f"{MODELS_DIR}BERT-loss:{loss:.2}")
+        if avg_loss < 0.015:
+            torch.save(model, f"{MODELS_DIR}BERT-loss:{avg_loss:.3}")
             break
 
 if __name__ == "__main__":
