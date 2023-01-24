@@ -3,5 +3,6 @@ BERT trained on a vocabulary and sequence format concatenating verbal descriptio
 ### Data / Sequence Format
 ```
 [DESC] <description tokens + [PAD] tokens> [IMG] <image tokens>
-```
 (Training data only applies [MASK] tokens to the description tokens)
+```
+
