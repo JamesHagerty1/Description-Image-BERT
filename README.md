@@ -16,4 +16,4 @@ One reason for this BERT is to see the contextual-embedding / attention relation
 <img src="/attention_plots/attn_plot.png" width="1500">
 
 ### Plans / Thoughts
-May run this on a modified version of the CIFAR-100 dataset (but with better image descriptions). The inspiration for this BERT is that all information can be thought of as an interconnected whole / graph - and that we pay more attention to some information over the rest. (Hence why verbal tokens and image tokens belong to the same sequence on which self-attention is performed.)
+May run this on a modified version of the CIFAR-100 dataset (with better image descriptions). The inspiration for this BERT is that all information can be thought of as an interconnected whole / graph - and that we pay more attention to some information over the rest. (Hence why verbal tokens and image tokens belong to the same sequence on which self-attention is performed.)
