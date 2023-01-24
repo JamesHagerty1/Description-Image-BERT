@@ -58,7 +58,7 @@ def main():
             loss_sum, iters = loss_sum + loss.item(), iters + 1
         avg_loss = loss_sum / iters
         print(avg_loss)
-        if avg_loss < 0.01:
+        if avg_loss < 0.005:
             torch.save(model, f"{MODELS_DIR}BERT-loss:{avg_loss:.3}")
             break
 

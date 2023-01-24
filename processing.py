@@ -199,9 +199,16 @@ def tokens_matrix(image_tokens):
 
 def tokens_image(image_tokens, output_path):
     matrix = tokens_matrix(image_tokens)
-    print(matrix)
+    image = im.fromarray(matrix).convert("RGBA")
+    o = np.ones((60, 60, 4), dtype=np.uint8)
+    o *= 100
+    for r in range(o.shape[0]):
+        for c in range(o.shape[1]):
+            o[r][c][1] += 100
+    overlay = im.fromarray(o) #.convert("RGBA")
+    image.paste(overlay, mask=overlay)
     plt.figure(figsize=(5,5))
-    plt.imsave(output_path, matrix)
+    plt.imsave(output_path, np.array(image))
 
 
 # TEMP ref
