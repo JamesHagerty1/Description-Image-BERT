@@ -1,5 +1,5 @@
 ## Description Image BERT
-BERT trained on a vocabulary and sequence format concatenating verbal description tokens to token-based representations of images. Classic BERT model implementation reference [here](https://neptune.ai/blog/how-to-code-bert-using-pytorch-tutorial); though this BERT is heavily modified from its source material (no next-sentence prediction, training negates attention to [PAD] tokens, and the nature of the data (explained in following sections) is novel).
+BERT trained on a vocabulary and sequence format concatenating verbal description tokens to token-based representations of images. Classic BERT model implementation reference [here](https://neptune.ai/blog/how-to-code-bert-using-pytorch-tutorial); though this BERT is heavily modified from its source material (no next-sentence prediction, training negates logits at [PAD] tokens, and the nature of the data (explained in following sections) is novel).
 ### Sequence Format
 ```
 [DESC] <description tokens + [PAD] tokens> [IMG] <image trinary tokens>
