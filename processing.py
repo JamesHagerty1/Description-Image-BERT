@@ -10,6 +10,7 @@ import numpy as np
 import os
 import json
 import torch
+import matplotlib as mpl
 from matplotlib import pyplot as plt
 from PIL import Image as im
 from torch.nn.functional import softmax
@@ -181,11 +182,18 @@ def json_dataset_append(dataset_path, description_tokens, image_tokens,
 
 
 # TBD
-def vis(m):
-    fig, axs = plt.subplots(2, 2)
+def vis(rows, cols, plot_matrices, plot_titles):
+    assert(len(plot_matrices) == len(plot_titles)), \
+        "Plot matrices / titles mismatch"
+    assert (len(plot_matrices) == rows * cols), "Invalid plot grid dimensions"
+    mpl.rcParams["figure.dpi"] = 1024
+    mpl.rcParams["axes.titlesize"] = 5
+    fig, axs = plt.subplots(nrows=rows, ncols=cols)
     plt.setp(axs, xticks=[], yticks=[])
-    axs[0][0].set_title("<title>")
-    axs[0][0].imshow(m)
+    for r in range(rows):
+        for c in range(cols):
+            #axs[r][c].set_title(plot_titles[r*cols+c])
+            axs[r][c].imshow(plot_matrices[r*cols+c])
     plt.savefig("attention_plots/attn_plot.png")
 
 
@@ -251,7 +259,8 @@ def main():
     with open("./data/vocabulary.json") as json_file:
         json_data = json.load(json_file)
     id_to_token = json_data["id_to_token"]
-    plot_data = []
+    plot_matrices = []
+    plot_titles = []
     for i, batch in enumerate(dataloader):
         x, y_i, y, desc = batch
         with torch.no_grad():
@@ -262,8 +271,9 @@ def main():
         image_tokens = \
             [id_to_token[str(id.item())] for id in x[0]][2+DESC_MAX_LEN:]
         m = token_image_attention_matrix(image_tokens, attn, inf_i)
-        vis(m)
-        break
+        plot_matrices.append(m)
+        plot_titles.append(desc[0])
+    vis(9, 8, plot_matrices, plot_titles)
         
 if __name__ == "__main__":
     main()
