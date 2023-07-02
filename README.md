@@ -14,6 +14,3 @@ BERT trained on data where the sequence format is a concatenation of verbal desc
 One reason for this BERT is to see the contextual-embedding / attention relationships between [DESC] tokens and [IMG] tokens. Here are visuals showing how much attention select [DESC] tokens gave the [IMG] tokens comprising entire images (dataset limited to images of playing cards and their token vocabulary). **Zoom in to the plotted images** to see the attention more clearly; brighter red highlights represent greater attention values.
 
 <img src="/attention_plots/attn_plot.png" width="1500">
-
-### Plans / Thoughts
-May run this on a modified version of the CIFAR-100 dataset (with better image descriptions). The inspiration for this BERT is that all information can be thought of as an interconnected whole / graph - and that we pay more attention to some information over the rest. (Hence why verbal tokens and image tokens belong to the same sequence on which self-attention is performed.)
