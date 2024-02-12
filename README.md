@@ -6,7 +6,7 @@ BERT trained on data where the sequence format is a concatenation of verbal desc
 ```
 *Training data only applies [MASK] tokens to the description tokens.*
 ### Image -> Trinary Tokens
-60x60 grayscale images are unrolled into sequences of 3x3 sub-matrices of pixels where brightness values are bucketed then enumerated to trinary values (0, 1, or 2); then they are further unrolled into a "sentence" of 9-length trinary "words".
+60x60 grayscale images are unrolled into sequences of 3x3 sub-matrices of pixels where brightness values are bucketed then enumerated to trinary values (0, 1, or 2); then they are further unrolled into a sequence of 9-length trinary "words".
 ### Trinary Token
 <img src="/static/trinary_demo.png" height="300">
 
