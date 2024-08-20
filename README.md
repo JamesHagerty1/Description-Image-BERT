@@ -1,1 +1,1 @@
-Transformer encoder and some scripts showing off attention relationships between words describing an image and the pixels themselves
+Transformer encoder and some scripts showing the attention relationships between the words describing an image and the pixels themselves
